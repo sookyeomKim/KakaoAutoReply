@@ -1,0 +1,25 @@
+# Created by .ignore support plugin (hsz.mobi)
+### Example user template template
+### Example user template
+
+# IntelliJ project files
+.idea
+out
+gen
+settings.ini
+uploads/
+static/
+
+pychromeless/docker-compose.yml
+pychromeless/build.zip
+pychromeless/bin/
+Channel/__pycache__/
+Channel/migrations/__pycache__/
+FileUpload/__pycache__/
+FileUpload/migrations/__pycache__/
+KakaoAutoReply/__pycache__/
+Post/__pycache__/
+Post/migrations/__pycache__/
+Reply/__pycache__/
+Reply/migrations/__pycache__/
+

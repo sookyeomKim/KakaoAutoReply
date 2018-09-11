@@ -1,0 +1,84 @@
+{% extends 'base.html' %}
+
+{% block title %}channel{% endblock %}
+{% block style %}
+{% endblock %}
+{% block content %}
+    <h1>
+        채널 목록
+    </h1>
+    <p>
+        *구독자, 방문자, 활동 사용자는 오늘로부터 1주일간의 데이터입니다.
+    </p>
+    <section>
+        <button id="renew_channel" class="btn btn-primary">
+            채널 목록 갱신
+        </button>
+        <span id="renew_state" data-state="ready"></span>
+    </section>
+    <section class="channel_list_wrap">
+        <div class="card-columns">
+            {% for item in object_list %}
+
+                <div class="card">
+                    <img src="{{ item.channel_thumbnail_url }}" alt="{{ item.channel_title }}이미지">
+                    <div class="card-body">
+                        <h5 class="card-title">{{ item.channel_title }}({{ item.channel_e_title }})</h5>
+                    </div>
+                    <ul class="list-group">
+                        <li class="list-group-item">
+                            <div class="col-xs-2">소식받기 수</div>
+                            <div class="col-xs-10">{{ item.channel_news_count }}</div>
+                        </li>
+                        <li class="list-group-item">
+                            <div class="col-xs-2">구독자</div>
+                            <div class="col-xs-10">{{ item.channel_subscriber_count }}</div>
+                        </li>
+                        <li class="list-group-item">
+                            <div class="col-xs-2">방문자</div>
+                            <div class="col-xs-10">{{ item.channel_visitor_count }}</div>
+                        </li>
+                        <li class="list-group-item">
+                            <div class="col-xs-2">활동 사용자</div>
+                            <div class="col-xs-10">{{ item.channel_activity_users_count }}</div>
+                        </li>
+                    </ul>
+                    <div class="card-footer">
+                        <a href="{% url 'Channel:detail' item.id %}" class="card-link">게시글 목록 보기</a>
+                        <a href="{{ item.channel_url }}" class="card-link" target="_blank">채널 열기</a>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </section>
+{% endblock %}
+{% block scripts %}
+    <script>
+        (function ($) {
+            $(document).ready(function () {
+                $("#renew_channel").click(function () {
+                    var $renew_state = $("#renew_state");
+                    if ($renew_state.attr("data-state") === "working") {
+                        return false
+                    }
+                    $renew_state.attr("data-state", "working");
+                    $renew_state.text("갱신 중");
+                    $.ajax({
+                        dataType: 'json',
+                        url: "{% url 'Channel:renew_channel' %}"
+                    }).done(function (data) {
+                        if (data) {
+                            $("#renew_state").text("갱신 완료");
+                        } else {
+                            $("#renew_state").text("갱신 실패");
+                        }
+                        $renew_state.attr("data-state", "ready");
+                    }).fail(function () {
+                        $("#renew_state").text("갱신 실패");
+                        $renew_state.attr("data-state", "ready");
+                    })
+                });
+            });
+        })(jQuery)
+    </script>
+{% endblock %}

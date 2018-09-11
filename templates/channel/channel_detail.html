@@ -1,0 +1,185 @@
+{% extends 'base.html' %}
+
+{% block title %}channel{% endblock %}
+{% block style %}
+{% endblock %}
+{% block content %}
+    <h2>
+        {{ object.channel_title }} 의 게시글
+    </h2>
+    <section>
+        <a href="{% url 'Channel:index' %}" class="btn btn-secondary">목록으로 돌아가기</a>
+        <button id="renew_post" class="btn btn-primary">
+            게시글 목록 갱신
+        </button>
+        <span id="renew_state" data-state="ready"></span>
+    </section>
+    <section class="post_list_wrap">
+        {% for item in object.post_set.all %}
+            <div class="card mb-3">
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md post-wrap">
+                            <h5>{{ item.post_title }}</h5>{{ item.post_register_date }}
+                        </div>
+                        <div class="col-md work-wrap">
+                            {% if item.reply %}
+                                <div>
+                                    <a href="{% url 'Channel:Post:Reply:update' object.id item.id %}"
+                                       class="btn btn-warning">작업
+                                        수정</a>
+                                    <a href="{% url 'Channel:Post:Reply:delete' object.id item.id %}"
+                                       class="btn btn-danger">작업
+                                        삭제</a>
+                                    {#                                    {% if item.reply.trigger %}#}
+                                    {#                                        <button class="trigger_button btn btn-danger" data-status="off"#}
+                                    {#                                                data-post-id="{{ item.id }}"#}
+                                    {#                                                data-channel-id="{{ object.id }}">정지#}
+                                    {#                                        </button>#}
+                                    {#                                    {% else %}#}
+                                    {#                                        <button class="trigger_button btn btn-success" data-status="on"#}
+                                    {#                                                data-post-id="{{ item.id }}"#}
+                                    {#                                                data-channel-id="{{ object.id }}">시작#}
+                                    {#                                        </button>#}
+                                    {#                                    {% endif %}#}
+                                </div>
+                                <div class="row">
+                                    <div class="col-3">
+                                        작업 시간
+                                    </div>
+                                    <div class="col-9">
+                                        <div>
+                                            {{ item.reply.start_time }} ~ {{ item.reply.end_time }}
+                                        </div>
+                                        <div class="badge badge-primary">
+                                            {{ item.reply.interval_time }}분 간격
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-3">
+                                        최근 작업 시간
+                                    </div>
+                                    <div class="col-9">
+                                        {{ item.reply.execute_time }}
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-3">
+                                        상태
+                                    </div>
+                                    <div class="col-9">
+                                        <div class="status">
+                                            {% if item.reply.trigger %}
+                                                <div class="switch">
+                                                    <label>
+                                                        <input type="checkbox" class="trigger_button"
+                                                               checked="checked"
+                                                               data-status="off"
+                                                               data-post-id="{{ item.id }}"
+                                                               data-channel-id="{{ object.id }}">
+                                                        &nbsp;
+                                                    </label>
+                                                    <span class="state">가동 중</span>
+                                                </div>
+
+                                            {% else %}
+                                                <div class="switch">
+                                                    <label>
+                                                        <input type="checkbox" class="trigger_button"
+                                                               data-status="on"
+                                                               data-post-id="{{ item.id }}"
+                                                               data-channel-id="{{ object.id }}">
+                                                        &nbsp;
+                                                    </label>
+                                                    <span class="state">정지</span>
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-3">
+                                        댓글 내용
+                                    </div>
+                                    <div class="col-9">
+                                        {{ item.reply.content }}
+                                    </div>
+                                </div>
+
+                            {% else %}
+                                <div>
+                                    <a href="{% url 'Channel:Post:Reply:create' object.id item.id %}"
+                                       class="btn btn-info">작업
+                                        등록</a>
+                                </div>
+                                등록된 작업이 없습니다.
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </section>
+{% endblock %}
+{% block scripts %}
+    <script>
+        (function ($) {
+            $(document).ready(function () {
+                $("#renew_post").click(function () {
+                    var $renew_state = $("#renew_state");
+                    if ($renew_state.attr("data-state") === "working") {
+                        return false
+                    }
+                    $renew_state.attr("data-state", "working");
+                    $renew_state.text("갱신 중");
+                    $.ajax({
+                        dataType: 'json',
+                        type: 'POST',
+                        method: 'POST',
+                        data: {
+                            "channel_url": "{{ object.channel_url }}"
+                        },
+                        url: "{% url 'Channel:Post:renew_post' object.id %}"
+                    }).done(function (data) {
+                        if (data) {
+                            $("#renew_state").text("갱신 완료");
+                        } else {
+                            $("#renew_state").text("갱신 실패");
+                        }
+                        $renew_state.attr("data-state", "ready");
+                    }).fail(function () {
+                        $("#renew_state").text("갱신 실패");
+                        $renew_state.attr("data-state", "ready");
+                    })
+                });
+
+                $(".trigger_button").click(function () {
+                    var $this = $(this);
+                    var get_status = $this.attr("data-status");
+                    var get_post_id = $this.attr("data-post-id");
+                    var get_channel_id = $this.attr("data-channel-id");
+                    $.ajax({
+                        dataType: 'json',
+                        type: "POST",
+                        url: "/Channel/" + get_channel_id + "/Post/" + get_post_id + "/Reply/trigger",
+                        method: 'PUT',
+                        data: {
+                            "status": get_status
+                        }
+                    }).done(function (data) {
+                        if (data.status) {
+                            if (data.text === "on") {
+                                $this.attr("data-status", "on").removeAttr("checked").closest(".switch").find(".state").text("정지");
+                            } else {
+                                $this.attr("data-status", "off").attr("checked", "checked").closest(".switch").find(".state").text("가동 중");
+                            }
+                        }
+                    }).fail(function () {
+                        alert("관지자에게 문의해주세요.")
+                    })
+                })
+            });
+        })(jQuery)
+    </script>
+{% endblock %}

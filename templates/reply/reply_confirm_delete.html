@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+
+{% block title %}channel{% endblock %}
+{% block style %}
+{% endblock %}
+{% block content %}
+    <h1>
+
+    </h1>
+    <section>
+        <form method="post">{% csrf_token %}
+            {{ form.as_p }}
+            <button type="submit" class="btn btn-danger">삭제</button>
+        </form>
+    </section>
+{% endblock %}
+{% block scripts %}
+    <script>
+        (function ($) {
+            $(document).ready(function () {
+
+            });
+        })(jQuery)
+    </script>
+{% endblock %}
