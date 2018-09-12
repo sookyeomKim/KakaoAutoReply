@@ -15,7 +15,6 @@ import concurrent.futures
 
 import boto3
 import boto3.session
-import numpy
 
 import pymysql
 
@@ -28,8 +27,8 @@ logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
 random_num_dict = {}
-# for i in range(1, 15, 1):
-for i in numpy.arange(1.5, 23.5, 2.0):
+for i in range(2, 30, 2):
+    # for i in numpy.arange(1.5, 23.5, 2.0):
     random_num_dict[i] = 'ready'
 
 
@@ -57,6 +56,11 @@ def reply_executor(row):
         dbcur.execute("""SELECT * FROM `Channel` channel WHERE channel.id = '{}'""".format(row['channel_id']))
         get_channel = dbcur.fetchone()
         channel_name = get_channel['channel_title']
+
+        dbcur = db.cursor(pymysql.cursors.DictCursor)
+        dbcur.execute(
+            """SELECT * FROM `auth_user` auth_user WHERE auth_user.id = '{}'""".format(get_channel['owner_id']))
+        get_user = dbcur.fetchone()
 
         chrome_options = webdriver.ChromeOptions()
         _tmp_folder = '/tmp/{}'.format(uuid.uuid4())
@@ -105,7 +109,7 @@ def reply_executor(row):
                                             region_name='ap-northeast-2')
             s3_client = session.client('s3')
             s3_response = s3_client.get_object(Bucket=os.getenv('STORAGE_BUCKET_NAME'),
-                                               Key='uploads/cookies/jinzza1234gmail.com.pkl')
+                                               Key='uploads/cookies/' + get_user['username'].replace("@", "") + '.pkl')
             get_cookies = s3_response['Body'].read()
         except Exception as e:
             logger.info(e)
@@ -130,7 +134,6 @@ def reply_executor(row):
                 random_num_dict[ran_num] = "working"
                 break
         ran_num = ran_num + float(decimal.Decimal(random.randrange(0, 5)) / 10)
-        print(ran_num)
         time.sleep(ran_num)
 
         _driver.get(row['post_url'])
@@ -160,6 +163,7 @@ def reply_executor(row):
 
             get_box_text = _driver.find_element_by_css_selector(".box_text")
             get_box_text.click()
+
             _driver.execute_script("arguments[0].innerHTML = arguments[1];", get_box_text,
                                    html.unescape(row['content']))
             time.sleep(1)
@@ -211,7 +215,7 @@ def reply_executor(row):
 
 def lambda_handler(event, context):
     try:
-        start_time = time.time()
+        # start_time = time.time()
         db = pymysql.connect(os.getenv('DB_HOST'), user=os.getenv('DB_USER'),
                              password=os.getenv('DB_PASSWD'), database=os.getenv('DB_DATABASE'), connect_timeout=5,
                              charset='utf8mb4')
@@ -237,8 +241,8 @@ def lambda_handler(event, context):
             db.close()
             sys.exit()
 
-        e = int(time.time() - start_time)
-        print('{:02d}:{:02d}:{:02d}'.format(e // 3600, (e % 3600 // 60), e % 60))
+        # e = int(time.time() - start_time)
+        # print('{:02d}:{:02d}:{:02d}'.format(e // 3600, (e % 3600 // 60), e % 60))
 
     except Exception as e:
         logger.info(e)
