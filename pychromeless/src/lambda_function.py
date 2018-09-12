@@ -27,7 +27,7 @@ logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
 random_num_dict = {}
-for i in range(2, 30, 2):
+for i in range(2, 36, 3):
     # for i in numpy.arange(1.5, 23.5, 2.0):
     random_num_dict[i] = 'ready'
 
@@ -48,6 +48,7 @@ def check_table_exists(db, table_name):
 
 
 def reply_executor(row):
+    logger.info(row['post_title'] + " 댓글 달기 시작")
     try:
         db = pymysql.connect(os.getenv('DB_HOST'), user=os.getenv('DB_USER'),
                              password=os.getenv('DB_PASSWD'), database=os.getenv('DB_DATABASE'), connect_timeout=5,
@@ -78,21 +79,25 @@ def reply_executor(row):
             os.makedirs(_tmp_folder + '/cache-dir')
 
         chrome_options.add_argument('--headless')
-        chrome_options.add_argument('--no-sandbox')
-        chrome_options.add_argument('--disable-gpu')
-        chrome_options.add_argument('--window-size=1920x3080')
+        chrome_options.add_argument(
+            '--no-sandbox')  # sandbox를 사용하지 않는다 보안 이슈가 있어 권고사항이 아니지만 크롤링목적으로 띄우는 브라우저에서는 딱히 무관한 이슈라고나 할까 무튼 헤드리스 동작시키려면 필수 옵션
+        chrome_options.add_argument('--disable-gpu')  # gpu를 사용x 윈도우에서는 실행 시 필요한 옵션
+        chrome_options.add_argument('--blink-settings=imagesEnabled=false')  # 이미지 방지
+        chrome_options.add_argument('--window-size=1024x3072')
+        chrome_options.add_argument("--disable-infobars")  # 정보바 끄기
+        chrome_options.add_argument("--disable-extensions")  # 확장기능 끄기
+        chrome_options.add_argument("--disable-dev-shm-usage")  # 리소스 제한 문제 끄기
         chrome_options.add_argument('--user-data-dir={}'.format(_tmp_folder + '/user-data'))
-        chrome_options.add_argument('--hide-scrollbars')
+        chrome_options.add_argument('--hide-scrollbars')  # 스크롤 감추기
         chrome_options.add_argument('--enable-logging')
         chrome_options.add_argument('--log-level=0')
-        chrome_options.add_argument('--v=99')
         chrome_options.add_argument('--single-process')
         chrome_options.add_argument('--data-path={}'.format(_tmp_folder + '/data-path'))
         chrome_options.add_argument('--ignore-certificate-errors')
         chrome_options.add_argument('--homedir={}'.format(_tmp_folder))
         chrome_options.add_argument('--disk-cache-dir={}'.format(_tmp_folder + '/cache-dir'))
-        chrome_options.add_argument(
-            'user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/62.0.3165.0 Safari/537.36')
+        # chrome_options.add_argument(
+        #     'user-agent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/69.0.3497.92 Safari/537.36')
 
         chrome_options.binary_location = os.getcwd() + "/bin/headless-chromium"
 
@@ -133,7 +138,8 @@ def reply_executor(row):
             if check_rn_status is "ready":
                 random_num_dict[ran_num] = "working"
                 break
-        ran_num = ran_num + float(decimal.Decimal(random.randrange(0, 5)) / 10)
+        # ran_num = ran_num + float(decimal.Decimal(random.randrange(0, 10)) / 10)
+        ran_num = float(ran_num) + round(float((random.randint(0, 10) / 10)), 1)
         time.sleep(ran_num)
 
         _driver.get(row['post_url'])

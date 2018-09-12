@@ -1,4 +1,4 @@
 PyMySQL
 boto3
-selenium==2.53.6
-chromedriver-installer==0.0.6
+selenium
+chromedriver-installer
