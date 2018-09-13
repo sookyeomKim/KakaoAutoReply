@@ -8,7 +8,6 @@ import json
 import time
 import html
 import random
-import decimal
 import _pickle as c_pickle
 
 import concurrent.futures
@@ -28,7 +27,6 @@ logger.setLevel(logging.INFO)
 
 random_num_dict = {}
 for i in range(2, 36, 3):
-    # for i in numpy.arange(1.5, 23.5, 2.0):
     random_num_dict[i] = 'ready'
 
 
@@ -52,13 +50,21 @@ def reply_executor(row):
     try:
         db = pymysql.connect(os.getenv('DB_HOST'), user=os.getenv('DB_USER'),
                              password=os.getenv('DB_PASSWD'), database=os.getenv('DB_DATABASE'), connect_timeout=5,
-                             charset='utf8mb4')
+                             charset='utf8mb4', autocommit=True, init_command="set time_zone = 'Asia/Seoul'")
         dbcur = db.cursor(pymysql.cursors.DictCursor)
+        dbcur.execute(
+            """
+            UPDATE `Post` post
+            JOIN `Reply` reply
+            ON post.id = reply.post_id
+            SET reply.execute_time = NOW()
+            WHERE post.id = '{}'
+            """.format(row['id']))
+
         dbcur.execute("""SELECT * FROM `Channel` channel WHERE channel.id = '{}'""".format(row['channel_id']))
         get_channel = dbcur.fetchone()
         channel_name = get_channel['channel_title']
 
-        dbcur = db.cursor(pymysql.cursors.DictCursor)
         dbcur.execute(
             """SELECT * FROM `auth_user` auth_user WHERE auth_user.id = '{}'""".format(get_channel['owner_id']))
         get_user = dbcur.fetchone()
@@ -199,6 +205,7 @@ def reply_executor(row):
             logger.info(e)
         finally:
             _driver.quit()
+            db.close()
             # ran_num 다시 ready 상태로
             random_num_dict[ran_num] = "ready"
 
@@ -224,16 +231,22 @@ def lambda_handler(event, context):
         # start_time = time.time()
         db = pymysql.connect(os.getenv('DB_HOST'), user=os.getenv('DB_USER'),
                              password=os.getenv('DB_PASSWD'), database=os.getenv('DB_DATABASE'), connect_timeout=5,
-                             charset='utf8mb4')
+                             charset='utf8mb4', init_command="set time_zone = 'Asia/Seoul'")
 
         logger.info("SUCCESS: Connection to RDS mysql instance succeeded")
 
         if check_table_exists(db, 'Post'):
             dbcur = db.cursor(pymysql.cursors.DictCursor)
             dbcur.execute("""
-                    SELECT * FROM `Post` post INNER JOIN `Reply` reply ON post.id = reply.post_id WHERE `trigger` IS TRUE 
+                    SELECT * FROM `Post` post 
+                    JOIN `Reply` reply 
+                    ON post.id = reply.post_id
+                    WHERE `trigger` IS TRUE 
+                    AND `start_time` <= NOW() 
+                    AND `end_time` >= NOW()
+                    AND TIMESTAMPDIFF(SECOND, reply.execute_time, NOW()) >= interval_time*60
                     """)
-            rows = dbcur.fetchall()
+            rows=dbcur.fetchall()
             db.close()
 
             logger.info("SUCCESS: Termination to RDS mysql instance succeeded")
