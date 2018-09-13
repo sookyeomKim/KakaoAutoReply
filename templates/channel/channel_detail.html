@@ -9,13 +9,15 @@
     </h2>
     <section>
         <a href="{% url 'Channel:index' %}" class="btn btn-secondary">목록으로 돌아가기</a>
+        <a href="{% url 'Channel:detail' object.id %}" class="btn btn-secondary">모든 게시물</a>
+        <a href="{% url 'Channel:detail' object.id %}?type=register_task" class="btn btn-secondary">작업 등록된 게시물</a>
         <button id="renew_post" class="btn btn-primary">
             게시글 목록 갱신
         </button>
         <span id="renew_state" data-state="ready"></span>
     </section>
     <section class="post_list_wrap">
-        {% for item in object.post_set.all %}
+        {% for item in posts %}
             <div class="card mb-3">
                 <div class="card-body">
                     <div class="row">

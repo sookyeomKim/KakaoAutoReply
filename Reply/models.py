@@ -21,7 +21,6 @@ class Reply(models.Model):
     content = models.TextField()
     trigger = models.BooleanField(default=False)
     post = models.OneToOneField(Post, on_delete=models.CASCADE)
-    # channel = models.ForeignKey(Channel, on_delete=models.CASCADE)
     create_date = models.DateTimeField(auto_now_add=True)
     modify_date = models.DateTimeField(auto_now=True)
 

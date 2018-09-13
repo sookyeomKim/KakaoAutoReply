@@ -14,7 +14,6 @@ import boto3
 from django.views.generic import ListView, DetailView
 
 from Channel.models import Channel
-from Post.models import Post
 
 
 class ChannelLV(ListView):
@@ -24,10 +23,17 @@ class ChannelLV(ListView):
 class ChannelDV(DetailView):
     model = Channel
 
-    # def get_context_data(self, **kwargs):
-    #     context = super(ChannelDV, self).get_context_data(**kwargs)
-    #     context['posts'] = Post.objects.filter(channel_id=self.object.id)
-    #     return context
+    def get_context_data(self, **kwargs):
+        context = super(ChannelDV, self).get_context_data(**kwargs)
+        pk = self.kwargs['pk']
+        list_type = self.request.GET.get('type')
+        channel = Channel.objects.get(id=pk)
+        context['object'] = channel
+        if list_type == "register_task":
+            context['posts'] = channel.post_set.filter(reply__isnull=False)
+        else:
+            context['posts'] = channel.post_set.all()
+        return context
 
 
 def renew_channel(request):

@@ -52,15 +52,6 @@ def reply_executor(row):
                              password=os.getenv('DB_PASSWD'), database=os.getenv('DB_DATABASE'), connect_timeout=5,
                              charset='utf8mb4', autocommit=True, init_command="set time_zone = 'Asia/Seoul'")
         dbcur = db.cursor(pymysql.cursors.DictCursor)
-        dbcur.execute(
-            """
-            UPDATE `Post` post
-            JOIN `Reply` reply
-            ON post.id = reply.post_id
-            SET reply.execute_time = NOW()
-            WHERE post.id = '{}'
-            """.format(row['id']))
-
         dbcur.execute("""SELECT * FROM `Channel` channel WHERE channel.id = '{}'""".format(row['channel_id']))
         get_channel = dbcur.fetchone()
         channel_name = get_channel['channel_title']
@@ -147,7 +138,6 @@ def reply_executor(row):
         # ran_num = ran_num + float(decimal.Decimal(random.randrange(0, 10)) / 10)
         ran_num = float(ran_num) + round(float((random.randint(0, 10) / 10)), 1)
         time.sleep(ran_num)
-
         _driver.get(row['post_url'])
         logger.info(row['post_title'] + " 게시글 오픈")
         try:
@@ -163,7 +153,6 @@ def reply_executor(row):
 
         get_list_comment = _driver_wait.until(
             EC.presence_of_all_elements_located((By.CSS_SELECTOR, ".list_comment li")))
-
         try:
             try:
                 # 첫 댓글 이모티콘인지 체크
@@ -205,6 +194,14 @@ def reply_executor(row):
             logger.info(e)
         finally:
             _driver.quit()
+            dbcur.execute(
+                """
+                UPDATE `Post` post
+                JOIN `Reply` reply
+                ON post.id = reply.post_id
+                SET reply.execute_time = NOW()
+                WHERE post.id = '{}'
+                """.format(row['id']))
             db.close()
             # ran_num 다시 ready 상태로
             random_num_dict[ran_num] = "ready"

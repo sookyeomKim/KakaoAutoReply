@@ -18,11 +18,6 @@ from selenium.webdriver.support.wait import WebDriverWait
 
 from Post.models import Post
 
-
-class PostDV(DetailView):
-    model = Post
-
-
 def renew_post(request, pk):
     success = True
     options = webdriver.ChromeOptions()

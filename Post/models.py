@@ -17,3 +17,9 @@ class Post(models.Model):
     class Meta:
         db_table = 'Post'
         ordering = ['-post_register_date']
+
+    def check_reply(self):
+        try:
+            return self.reply
+        except:
+            return None
