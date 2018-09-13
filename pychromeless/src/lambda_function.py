@@ -228,7 +228,6 @@ def reply_executor(row):
 
 def lambda_handler(event, context):
     try:
-        # start_time = time.time()
         db = pymysql.connect(os.getenv('DB_HOST'), user=os.getenv('DB_USER'),
                              password=os.getenv('DB_PASSWD'), database=os.getenv('DB_DATABASE'), connect_timeout=5,
                              charset='utf8mb4', init_command="set time_zone = 'Asia/Seoul'")
@@ -246,7 +245,7 @@ def lambda_handler(event, context):
                     AND `end_time` >= NOW()
                     AND TIMESTAMPDIFF(SECOND, reply.execute_time, NOW()) >= interval_time*60
                     """)
-            rows=dbcur.fetchall()
+            rows = dbcur.fetchall()
             db.close()
 
             logger.info("SUCCESS: Termination to RDS mysql instance succeeded")
@@ -259,15 +258,11 @@ def lambda_handler(event, context):
             logger.info("FAILED : no table")
             db.close()
             sys.exit()
-
-        # e = int(time.time() - start_time)
-        # print('{:02d}:{:02d}:{:02d}'.format(e // 3600, (e % 3600 // 60), e % 60))
-
     except Exception as e:
         logger.info(e)
         sys.exit()
 
     return {
         "statusCode": 200,
-        "body": json.dumps('Hello from Lambda!')
+        "body": json.dumps('SUCCESS')
     }
