@@ -1,5 +1,4 @@
 import json
-import pickle
 import _pickle as c_pickle
 from decouple import config
 from datetime import datetime
@@ -11,36 +10,13 @@ from selenium.webdriver.support.wait import WebDriverWait
 import boto3
 
 # Create your views here.
-from django.views.generic import ListView, DetailView
+from django.views.generic import ListView
 
 from Channel.models import Channel
 
 
 class ChannelLV(ListView):
     model = Channel
-
-
-class ChannelDV(DetailView):
-    model = Channel
-
-    def get_context_data(self, **kwargs):
-        context = super(ChannelDV, self).get_context_data(**kwargs)
-        pk = self.kwargs['pk']
-        # request.GET['type']는 MultiValueDictKeyError 발생
-        list_type = self.request.GET.get('list_type')
-        channel = Channel.objects.get(id=pk)
-        context['object'] = channel
-        if list_type == "register_task":
-            context['posts'] = channel.post_set.filter(reply__isnull=False)
-        elif list_type == "working":
-            context['posts'] = channel.post_set.filter(reply__trigger=True)
-        elif list_type == "stopping":
-            context['posts'] = channel.post_set.filter(reply__trigger=False)
-        elif list_type == "all":
-            context['posts'] = channel.post_set.all()
-        else:
-            context['posts'] = channel.post_set.all()
-        return context
 
 def renew_channel(request):
     success = True

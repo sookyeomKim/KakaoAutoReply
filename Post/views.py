@@ -1,5 +1,4 @@
 import json
-import pickle
 from time import sleep
 
 import boto3
@@ -9,14 +8,38 @@ from decouple import config
 from django.http import HttpResponse, QueryDict
 from datetime import datetime
 
-from django.views.generic import DetailView
+from django.views.generic import ListView
 from selenium import webdriver
-from selenium.webdriver import ActionChains
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.wait import WebDriverWait
 
+from Channel.models import Channel
 from Post.models import Post
+
+
+class PostLV(ListView):
+    model = Post
+
+    def get_context_data(self, **kwargs):
+        context = super(PostLV, self).get_context_data(**kwargs)
+        pk = self.kwargs['pk']
+        # request.GET['type']는 MultiValueDictKeyError 발생
+        list_type = self.request.GET.get('list_type')
+        channel = Channel.objects.get(id=pk)
+        context['channel'] = channel
+        if list_type == "register_task":
+            context['posts'] = channel.post_set.filter(reply__isnull=False)
+        elif list_type == "working":
+            context['posts'] = channel.post_set.filter(reply__trigger=True)
+        elif list_type == "stopping":
+            context['posts'] = channel.post_set.filter(reply__trigger=False)
+        elif list_type == "all":
+            context['posts'] = channel.post_set.all()
+        else:
+            context['posts'] = channel.post_set.all()
+        return context
+
 
 def renew_post(request, pk):
     success = True

@@ -4,18 +4,23 @@
 {% block style %}
 {% endblock %}
 {% block content %}
-    <h1>
-        채널 목록
-    </h1>
+    <section class="d-flex flex-column flex-sm-row">
+        <div class="p-1">
+            <h2>
+                채널 목록
+            </h2>
+        </div>
+        <div class="p-1">
+            <button id="renew_channel" class="btn btn-primary">
+                채널 목록 갱신
+            </button>
+            <span id="renew_state" data-state="ready"></span>
+        </div>
+    </section>
     <p>
         *구독자, 방문자, 활동 사용자는 오늘로부터 1주일간의 데이터입니다.
     </p>
-    <section>
-        <button id="renew_channel" class="btn btn-primary">
-            채널 목록 갱신
-        </button>
-        <span id="renew_state" data-state="ready"></span>
-    </section>
+
     <section class="channel_list_wrap">
         <div class="card-columns">
             {% for item in object_list %}
@@ -44,7 +49,7 @@
                         </li>
                     </ul>
                     <div class="card-footer">
-                        <a href="{% url 'Channel:detail' item.id %}" class="card-link">게시글 목록 보기</a>
+                        <a href="{% url 'Channel:Post:index' item.id %}" class="card-link">게시글 목록 보기</a>
                         <a href="{{ item.channel_url }}" class="card-link" target="_blank">채널 열기</a>
                     </div>
                 </div>

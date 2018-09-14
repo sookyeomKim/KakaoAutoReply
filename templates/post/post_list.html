@@ -4,29 +4,41 @@
 {% block style %}
 {% endblock %}
 {% block content %}
-    <h2>
-        {{ object.channel_title }} 의 게시글
-    </h2>
-    <section>
-        <a href="{% url 'Channel:index' %}" class="btn btn-secondary">채널 목록으로 돌아가기</a>
-        <button id="renew_post" class="btn btn-primary">
-            게시글 목록 갱신
-        </button>
-        <span id="renew_state" data-state="ready"></span>
+    <section class="p-1 d-flex flex-column-reverse flex-sm-row justify-content-sm-between">
+        <div class="d-flex flex-column flex-sm-row">
+            <div class="p-1">
+                <h2>
+                    {{ channel.channel_title }} 의 게시글
+                </h2>
+            </div>
+            <div class="p-1">
+                <button id="renew_post" class="btn btn-primary">
+                    게시글 목록 갱신
+                </button>
+                <span id="renew_state" data-state="ready"></span>
+            </div>
+        </div>
+        <div class="d-flex flex-row">
+            <div class="p-1">
+                <a href="{% url 'Channel:index' %}" class="btn btn-secondary">채널 목록으로 돌아가기</a>
+            </div>
+        </div>
+    </section>
 
+    <section>
         <ul class="nav">
             <li class="nav-item">
-                <a href="{% url 'Channel:detail' object.id %}?list_type=all" class="btn btn-secondary">모든 게시물</a>
+                <a href="{% url 'Channel:Post:index' channel.id %}?list_type=all" class="btn btn-secondary">모든 게시물</a>
             </li>
             <li class="nav-item">
-                <a href="{% url 'Channel:detail' object.id %}?list_type=register_task" class="btn btn-secondary">작업
+                <a href="{% url 'Channel:Post:index' channel.id %}?list_type=register_task" class="btn btn-secondary">작업
                     등록된</a>
             </li>
             <li class="nav-item">
-                <a href="{% url 'Channel:detail' object.id %}?list_type=working" class="btn btn-secondary">댓글 달기 중</a>
+                <a href="{% url 'Channel:Post:index' channel.id %}?list_type=working" class="btn btn-secondary">댓글 달기 중</a>
             </li>
             <li class="nav-item">
-                <a href="{% url 'Channel:detail' object.id %}?list_type=stopping" class="btn btn-secondary">댓글 달기 중지
+                <a href="{% url 'Channel:Post:index' channel.id %}?list_type=stopping" class="btn btn-secondary">댓글 달기 중지
                     중</a>
             </li>
         </ul>
@@ -44,21 +56,21 @@
                         <div class="col-md work-wrap">
                             {% if item.reply %}
                                 <div>
-                                    <a href="{% url 'Channel:Post:Reply:update' object.id item.id %}"
+                                    <a href="{% url 'Channel:Post:Reply:update' channel.id item.id %}"
                                        class="btn btn-warning">작업
                                         수정</a>
-                                    <a href="{% url 'Channel:Post:Reply:delete' object.id item.id %}"
+                                    <a href="{% url 'Channel:Post:Reply:delete' channel.id item.id %}"
                                        class="btn btn-danger">작업
                                         삭제</a>
                                     {#                                    {% if item.reply.trigger %}#}
                                     {#                                        <button class="trigger_button btn btn-danger" data-status="off"#}
                                     {#                                                data-post-id="{{ item.id }}"#}
-                                    {#                                                data-channel-id="{{ object.id }}">정지#}
+                                    {#                                                data-channel-id="{{ channel.id }}">정지#}
                                     {#                                        </button>#}
                                     {#                                    {% else %}#}
                                     {#                                        <button class="trigger_button btn btn-success" data-status="on"#}
                                     {#                                                data-post-id="{{ item.id }}"#}
-                                    {#                                                data-channel-id="{{ object.id }}">시작#}
+                                    {#                                                data-channel-id="{{ channel.id }}">시작#}
                                     {#                                        </button>#}
                                     {#                                    {% endif %}#}
                                 </div>
@@ -96,7 +108,7 @@
                                                                checked="checked"
                                                                data-status="off"
                                                                data-post-id="{{ item.id }}"
-                                                               data-channel-id="{{ object.id }}">
+                                                               data-channel-id="{{ channel.id }}">
                                                         &nbsp;
                                                     </label>
                                                     <span class="state">가동 중</span>
@@ -108,7 +120,7 @@
                                                         <input type="checkbox" class="trigger_button"
                                                                data-status="on"
                                                                data-post-id="{{ item.id }}"
-                                                               data-channel-id="{{ object.id }}">
+                                                               data-channel-id="{{ channel.id }}">
                                                         &nbsp;
                                                     </label>
                                                     <span class="state">정지</span>
@@ -128,7 +140,7 @@
 
                             {% else %}
                                 <div>
-                                    <a href="{% url 'Channel:Post:Reply:create' object.id item.id %}"
+                                    <a href="{% url 'Channel:Post:Reply:create' channel.id item.id %}"
                                        class="btn btn-info">작업
                                         등록</a>
                                 </div>
@@ -157,9 +169,9 @@
                         type: 'POST',
                         method: 'POST',
                         data: {
-                            "channel_url": "{{ object.channel_url }}"
+                            "channel_url": "{{ channel.channel_url }}"
                         },
-                        url: "{% url 'Channel:Post:renew_post' object.id %}"
+                        url: "{% url 'Channel:Post:renew_post' channel.id %}"
                     }).done(function (data) {
                         if (data) {
                             $("#renew_state").text("갱신 완료");

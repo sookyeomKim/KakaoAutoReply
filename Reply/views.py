@@ -1,11 +1,10 @@
 import json
 
 from django.http import QueryDict, HttpResponse
-from django.shortcuts import render
 
 # Create your views here.
 from django.urls import reverse_lazy
-from django.views.generic import ListView, CreateView, UpdateView, DeleteView, DetailView
+from django.views.generic import CreateView, UpdateView, DeleteView, DetailView
 
 from Post.models import Post
 from Reply.forms import CreateForm, UpdateForm
@@ -29,7 +28,7 @@ class ReplyCV(CreateView, DetailView):
 
     def get_success_url(self):
         channel_id = self.kwargs['pk']
-        return reverse_lazy('Channel:detail', kwargs={'pk': channel_id})
+        return reverse_lazy('Channel:Post:index', kwargs={'pk': channel_id})
 
 
 class ReplyUV(UpdateView):
@@ -46,7 +45,7 @@ class ReplyUV(UpdateView):
 
     def get_success_url(self):
         channel_id = self.kwargs['pk']
-        return reverse_lazy('Channel:detail', kwargs={'pk': channel_id})
+        return reverse_lazy('Channel:Post:index', kwargs={'pk': channel_id})
 
 
 class ReplyDV(DeleteView):
@@ -58,7 +57,7 @@ class ReplyDV(DeleteView):
 
     def get_success_url(self):
         channel_id = self.kwargs['pk']
-        return reverse_lazy('Channel:detail', kwargs={'pk': channel_id})
+        return reverse_lazy('Channel:Post:index', kwargs={'pk': channel_id})
 
 
 def trigger(request, pk, pk2):

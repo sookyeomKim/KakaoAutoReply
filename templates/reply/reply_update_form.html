@@ -11,7 +11,7 @@
             </h2>
             <div class="card-body">
                 <h5 class="card-title">{{ object.post.post_title }}</h5>
-                <a href="{% url 'Channel:detail' object.post.channel.id %}" class="card-link">게시글 목록 보기</a>
+                <a href="{% url 'Channel:Post:index' object.post.channel.id %}" class="card-link">게시글 목록 보기</a>
                 <a href="{{ object.post.post_url }}" target="_blank">해당 게시글 열기</a>
                 <form method="post">{% csrf_token %}
                     <div class="form-group">
