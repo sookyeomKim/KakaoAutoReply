@@ -8,13 +8,30 @@
         {{ object.channel_title }} 의 게시글
     </h2>
     <section>
-        <a href="{% url 'Channel:index' %}" class="btn btn-secondary">목록으로 돌아가기</a>
-        <a href="{% url 'Channel:detail' object.id %}" class="btn btn-secondary">모든 게시물</a>
-        <a href="{% url 'Channel:detail' object.id %}?type=register_task" class="btn btn-secondary">작업 등록된 게시물</a>
+        <a href="{% url 'Channel:index' %}" class="btn btn-secondary">채널 목록으로 돌아가기</a>
         <button id="renew_post" class="btn btn-primary">
             게시글 목록 갱신
         </button>
         <span id="renew_state" data-state="ready"></span>
+
+        <ul class="nav">
+            <li class="nav-item">
+                <a href="{% url 'Channel:detail' object.id %}?list_type=all" class="btn btn-secondary">모든 게시물</a>
+            </li>
+            <li class="nav-item">
+                <a href="{% url 'Channel:detail' object.id %}?list_type=register_task" class="btn btn-secondary">작업
+                    등록된</a>
+            </li>
+            <li class="nav-item">
+                <a href="{% url 'Channel:detail' object.id %}?list_type=working" class="btn btn-secondary">댓글 달기 중</a>
+            </li>
+            <li class="nav-item">
+                <a href="{% url 'Channel:detail' object.id %}?list_type=stopping" class="btn btn-secondary">댓글 달기 중지
+                    중</a>
+            </li>
+        </ul>
+
+
     </section>
     <section class="post_list_wrap">
         {% for item in posts %}
