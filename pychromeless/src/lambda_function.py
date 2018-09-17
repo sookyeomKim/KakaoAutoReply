@@ -154,13 +154,14 @@ def reply_executor(row):
         get_list_comment = _driver_wait.until(
             EC.presence_of_all_elements_located((By.CSS_SELECTOR, ".list_comment li")))
         try:
-            try:
-                # 첫 댓글 이모티콘인지 체크
-                get_list_comment[0].find_element_by_css_selector(
-                    ".post_comment > .info_story > div > .channel_emoticon")
-                logger.info(row['post_title'] + " 첫 댓글 이모티콘 ok")
-            except:
-                raise Exception(row['post_title'] + " 첫 댓글 이모티콘 no")
+            check_reply = False
+            # try:
+            #     # 첫 댓글 이모티콘인지 체크
+            #     get_list_comment[0].find_element_by_css_selector(
+            #         ".post_comment > .info_story > div > .channel_emoticon")
+            #     logger.info(row['post_title'] + " 첫 댓글 이모티콘 ok")
+            # except:
+            #     raise Exception(row['post_title'] + " 첫 댓글 이모티콘 no")
 
             get_box_text = _driver.find_element_by_css_selector(".box_text")
             get_box_text.click()
@@ -174,9 +175,11 @@ def reply_executor(row):
                 try:
                     get_link_title = comment.find_element_by_css_selector(
                         ".link_title")
+
                     if channel_name == get_link_title.text:
                         logger.info(row['post_title'] + " 댓글 달기 종료")
                         break
+
                     try:
                         comment.find_element_by_css_selector(
                             ".channel_emoticon")
@@ -184,9 +187,12 @@ def reply_executor(row):
                         raise Exception(row['post_title'] + " 이모티콘 아닌건 패스")
 
                     get_link_title.click()
-
+                    check_reply = True
                 except Exception as e:
                     logger.info(e)
+
+            if not check_reply:
+                raise Exception(row['post_title'] + " 댓글 안 달림")
 
             time.sleep(1)
 
