@@ -33,6 +33,7 @@ urlpatterns = [
     path('reset/<uidb64>/<token>', PasswordResetConfirmView, name='password_reset_confirm'),
     path('reset/done', PasswordResetCompleteView, name='password_reset_complete'),
 
+    path('Api/', include('Api.urls')),
     path('FileUpload/', include('FileUpload.urls')),
     path('Channel/', include('Channel.urls'))
 ]

@@ -50,7 +50,7 @@ def reply_executor(row):
     try:
         db = pymysql.connect(os.getenv('DB_HOST'), user=os.getenv('DB_USER'),
                              password=os.getenv('DB_PASSWD'), database=os.getenv('DB_DATABASE'), connect_timeout=5,
-                             charset='utf8mb4', autocommit=True, init_command="set time_zone = 'Asia/Seoul'")
+                             charset='utf8mb4', autocommit=True)
         dbcur = db.cursor(pymysql.cursors.DictCursor)
         dbcur.execute("""SELECT * FROM `Channel` channel WHERE channel.id = '{}'""".format(row['channel_id']))
         get_channel = dbcur.fetchone()
@@ -172,15 +172,17 @@ def reply_executor(row):
             for comment in get_list_comment:
                 # 댓글이 이모티콘인 유저만 콜
                 try:
+                    get_link_title = comment.find_element_by_css_selector(
+                        ".link_title")
+                    if channel_name == get_link_title.text:
+                        logger.info(row['post_title'] + " 댓글 달기 종료")
+                        break
                     try:
                         comment.find_element_by_css_selector(
                             ".channel_emoticon")
                     except:
                         raise Exception(row['post_title'] + " 이모티콘 아닌건 패스")
-                    get_link_title = comment.find_element_by_css_selector(
-                        ".link_title")
-                    if channel_name is get_link_title.text:
-                        break
+
                     get_link_title.click()
 
                 except Exception as e:
@@ -227,7 +229,7 @@ def lambda_handler(event, context):
     try:
         db = pymysql.connect(os.getenv('DB_HOST'), user=os.getenv('DB_USER'),
                              password=os.getenv('DB_PASSWD'), database=os.getenv('DB_DATABASE'), connect_timeout=5,
-                             charset='utf8mb4', init_command="set time_zone = 'Asia/Seoul'")
+                             charset='utf8mb4')
 
         logger.info("SUCCESS: Connection to RDS mysql instance succeeded")
 

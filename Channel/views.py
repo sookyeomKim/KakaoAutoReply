@@ -1,7 +1,7 @@
 import json
 import _pickle as c_pickle
 from decouple import config
-from datetime import datetime
+from django.core.exceptions import ObjectDoesNotExist
 from django.http import HttpResponse
 from selenium import webdriver
 from selenium.webdriver.support import expected_conditions as EC
@@ -17,6 +17,7 @@ from Channel.models import Channel
 
 class ChannelLV(ListView):
     model = Channel
+
 
 def renew_channel(request):
     success = True
@@ -36,12 +37,12 @@ def renew_channel(request):
 
         print("웹드라이버 시작 완료")
 
-        chrome_driver.get("https://accounts.kakao.com/login")
+        chrome_driver.get("https://accounts.kakao.com")
 
         s3_client = boto3.client('s3', region_name='ap-northeast-2',
                                  aws_access_key_id=config('AWS_ACCESS_KEY_ID'),
                                  aws_secret_access_key=config('AWS_SECRET_ACCESS_KEY'))
-        s3_response = s3_client.get_object(Bucket='kakao-auto-reply',
+        s3_response = s3_client.get_object(Bucket=config('AWS_STORAGE_BUCKET_NAME'),
                                            Key='uploads/cookies/' + username.replace('@', '') + '.pkl')
         get_cookies = s3_response['Body'].read()
 
@@ -65,19 +66,20 @@ def renew_channel(request):
             channel_activity_users_count = item.find_element_by_css_selector(
                 ".info_data .define_data:nth-of-type(3) dd").text.replace(",", "")
             owner_id = request.user.id
-            check_channel = Channel.objects.filter(owner_id=owner_id, channel_title=channel_title)
-            if check_channel.exists():
-                check_channel.update(
-                    channel_url=channel_url,
-                    channel_e_title=channel_e_title,
-                    channel_thumbnail_url=channel_thumbnail_url,
-                    channel_news_count=channel_news_count,
-                    channel_subscriber_count=channel_subscriber_count,
-                    channel_visitor_count=channel_visitor_count,
-                    channel_activity_users_count=channel_activity_users_count,
-                    modify_date=datetime.now()
-                )
-            else:
+
+            try:
+                # update
+                check_channel = Channel.objects.get(owner_id=owner_id, channel_title=channel_title)
+                check_channel.channel_url = channel_url
+                check_channel.channel_e_title = channel_e_title
+                check_channel.channel_thumbnail_url = channel_thumbnail_url
+                check_channel.channel_news_count = channel_news_count
+                check_channel.channel_subscriber_count = channel_subscriber_count
+                check_channel.channel_visitor_count = channel_visitor_count
+                check_channel.channel_activity_users_count = channel_activity_users_count
+                check_channel.save()
+            except ObjectDoesNotExist:
+                # create
                 channel = Channel(
                     channel_title=channel_title,
                     channel_url=channel_url,

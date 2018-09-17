@@ -3,7 +3,6 @@ from django.utils.safestring import mark_safe
 from enumfields import EnumField
 from enumfields import Enum
 # Create your models here.
-from Channel.models import Channel
 from Post.models import Post
 
 

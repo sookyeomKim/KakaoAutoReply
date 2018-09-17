@@ -1,6 +1,6 @@
 import json
 
-from django.http import QueryDict, HttpResponse
+from django.http import HttpResponse
 
 # Create your views here.
 from django.urls import reverse_lazy
@@ -59,26 +59,24 @@ class ReplyDV(DeleteView):
         channel_id = self.kwargs['pk']
         return reverse_lazy('Channel:Post:index', kwargs={'pk': channel_id})
 
-
+# TODO status파라미터 받지 않고 처리
 def trigger(request, pk, pk2):
-    if request.method == "PUT":
-        result = {
-            "status": True
-        }
-        try:
-            query_dict = QueryDict(request.body)
-            status = query_dict.get('status')
-            post = Post.objects.get(id=pk2)
-            reply = post.reply
-            if status == "on":
-                reply.trigger = "1"
-                reply.save()
-                result["text"] = "off"
-            else:
-                reply.trigger = "0"
-                reply.save()
-                result["text"] = "on"
-        except Exception as e:
-            print(e)
-            result["status"] = False
-        return HttpResponse(json.dumps(result), content_type="application/json")
+    result = {
+        "status": True
+    }
+    try:
+        status = request.GET.get('status')
+        post = Post.objects.get(id=pk2)
+        reply = post.reply
+        if status == "on":
+            reply.trigger = "1"
+            reply.save()
+            result["text"] = "off"
+        else:
+            reply.trigger = "0"
+            reply.save()
+            result["text"] = "on"
+    except Exception as e:
+        print(e)
+        result["status"] = False
+    return HttpResponse(json.dumps(result), content_type="application/json")

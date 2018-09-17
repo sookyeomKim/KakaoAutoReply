@@ -1,22 +1,23 @@
 import json
-from time import sleep
-
 import boto3
 import _pickle as c_pickle
+import pytz
+from time import sleep
 from decouple import config
+from django.conf import settings
+from django.http import HttpResponse
+from django.utils.datetime_safe import datetime
 
-from django.http import HttpResponse, QueryDict
-from datetime import datetime
-
-from django.views.generic import ListView
 from selenium import webdriver
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.wait import WebDriverWait
 
+from django.core.exceptions import ObjectDoesNotExist
 from Channel.models import Channel
 from Post.models import Post
 
+from django.views.generic import ListView
 
 class PostLV(ListView):
     model = Post
@@ -56,17 +57,16 @@ def renew_post(request, pk):
     chrome_driver_wait = WebDriverWait(chrome_driver, 30)
     try:
         channel_id = pk
-        query_dict = QueryDict(request.body)
-        channel_url = query_dict.get('channel_url')
+        channel_url = request.GET.get('channel_url')
         username = request.user.username
 
         print("웹드라이버 시작 완료")
 
-        chrome_driver.get("https://accounts.kakao.com/login")
+        chrome_driver.get("https://accounts.kakao.com")
         s3_client = boto3.client('s3', region_name='ap-northeast-2',
                                  aws_access_key_id=config('AWS_ACCESS_KEY_ID'),
                                  aws_secret_access_key=config('AWS_SECRET_ACCESS_KEY'))
-        s3_response = s3_client.get_object(Bucket='kakao-auto-reply',
+        s3_response = s3_client.get_object(Bucket=config('AWS_STORAGE_BUCKET_NAME'),
                                            Key='uploads/cookies/' + username.replace('@', '') + '.pkl')
         get_cookies = s3_response['Body'].read()
 
@@ -94,19 +94,26 @@ def renew_post(request, pk):
             get_month = get_register_date[0].replace("월", "")
             get_day = get_register_date[1].replace("일", "")
             get_hour = get_register_date[3].split(":")[0]
-            get_hour = get_hour if (get_register_date[2] is "오전") else str(int(get_hour) + 12)
+            get_hour = get_hour if (get_register_date[2] == "오전") else str(int(get_hour) + 12)
             get_minute = get_register_date[3].split(":")[1]
             now = datetime.now()
-            post_register_date = datetime(int(now.year), int(get_month), int(get_day), int(get_hour), int(get_minute))
+            naive = datetime.strptime(
+                str(now.year) + "-" + get_month + "-" + get_day + " " + get_hour + ":" + get_minute + ":00",
+                "%Y-%m-%d %H:%M:%S")
+            local = pytz.timezone(settings.TIME_ZONE)
+            local_dt = local.localize(naive, is_dst=None)
+            # datetimefield를 직접 넣으면 파싱한 시간 그대로 들어가져버려 tz이 꼬인다. 그래서 직접 utc로 바꿨다.
+            post_register_date = local_dt.astimezone(pytz.utc)
             post_url = item.find_element_by_css_selector(".link_title").get_attribute("href")
-            check_post = Post.objects.filter(channel_id=channel_id, post_title=post_title)
-            if check_post.exists():
-                check_post.update(
-                    post_register_date=post_register_date,
-                    post_url=post_url,
-                    modify_date=datetime.now()
-                )
-            else:
+
+            try:
+                # update
+                check_post = Post.objects.get(channel_id=channel_id, post_title=post_title)
+                check_post.post_register_date = post_register_date
+                check_post.post_url = post_url
+                check_post.save()
+            except ObjectDoesNotExist:
+                # create
                 post = Post(
                     post_title=post_title,
                     post_register_date=post_register_date,

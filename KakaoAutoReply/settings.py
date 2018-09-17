@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     'Channel.apps.ChannelConfig',
     'Post.apps.PostConfig',
     'Reply.apps.ReplyConfig',
+    'Api.apps.ApiConfig',
 
     'storages',
 ]
@@ -115,7 +116,6 @@ AUTH_PASSWORD_VALIDATORS = [
 # https://docs.djangoproject.com/en/2.1/topics/i18n/
 
 LANGUAGE_CODE = 'ko-kr'
-# LANGUAGE_CODE = 'en-us'
 
 TIME_ZONE = 'Asia/Seoul'
 
@@ -123,7 +123,7 @@ USE_I18N = True
 
 USE_L10N = True
 
-USE_TZ = False
+USE_TZ = True
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/2.1/howto/static-files/

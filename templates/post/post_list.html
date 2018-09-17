@@ -35,10 +35,12 @@
                     등록된</a>
             </li>
             <li class="nav-item">
-                <a href="{% url 'Channel:Post:index' channel.id %}?list_type=working" class="btn btn-secondary">댓글 달기 중</a>
+                <a href="{% url 'Channel:Post:index' channel.id %}?list_type=working" class="btn btn-secondary">댓글 달기
+                    중</a>
             </li>
             <li class="nav-item">
-                <a href="{% url 'Channel:Post:index' channel.id %}?list_type=stopping" class="btn btn-secondary">댓글 달기 중지
+                <a href="{% url 'Channel:Post:index' channel.id %}?list_type=stopping" class="btn btn-secondary">댓글 달기
+                    중지
                     중</a>
             </li>
         </ul>
@@ -52,6 +54,7 @@
                     <div class="row">
                         <div class="col-md post-wrap">
                             <h5>{{ item.post_title }}</h5>{{ item.post_register_date }}
+                            <a href="{{ item.post_url }}" target="_blank" class="btn btn-success">해당 게시글 열기</a>
                         </div>
                         <div class="col-md work-wrap">
                             {% if item.reply %}
@@ -62,17 +65,7 @@
                                     <a href="{% url 'Channel:Post:Reply:delete' channel.id item.id %}"
                                        class="btn btn-danger">작업
                                         삭제</a>
-                                    {#                                    {% if item.reply.trigger %}#}
-                                    {#                                        <button class="trigger_button btn btn-danger" data-status="off"#}
-                                    {#                                                data-post-id="{{ item.id }}"#}
-                                    {#                                                data-channel-id="{{ channel.id }}">정지#}
-                                    {#                                        </button>#}
-                                    {#                                    {% else %}#}
-                                    {#                                        <button class="trigger_button btn btn-success" data-status="on"#}
-                                    {#                                                data-post-id="{{ item.id }}"#}
-                                    {#                                                data-channel-id="{{ channel.id }}">시작#}
-                                    {#                                        </button>#}
-                                    {#                                    {% endif %}#}
+
                                 </div>
                                 <div class="row">
                                     <div class="col-3">
@@ -166,8 +159,6 @@
                     $renew_state.text("갱신 중");
                     $.ajax({
                         dataType: 'json',
-                        type: 'POST',
-                        method: 'POST',
                         data: {
                             "channel_url": "{{ channel.channel_url }}"
                         },
@@ -192,9 +183,7 @@
                     var get_channel_id = $this.attr("data-channel-id");
                     $.ajax({
                         dataType: 'json',
-                        type: "POST",
                         url: "/Channel/" + get_channel_id + "/Post/" + get_post_id + "/Reply/trigger",
-                        method: 'PUT',
                         data: {
                             "status": get_status
                         }
