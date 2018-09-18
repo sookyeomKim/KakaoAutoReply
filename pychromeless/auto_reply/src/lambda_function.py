@@ -18,8 +18,6 @@ import boto3.session
 import pymysql
 
 from selenium import webdriver
-from selenium.webdriver.support import expected_conditions as EC
-from selenium.webdriver.common.by import By
 from selenium.webdriver.support.wait import WebDriverWait
 
 logger = logging.getLogger()
@@ -123,19 +121,17 @@ def reply_executor(row):
         time.sleep(ran_num)
         _driver.get(row['post_url'])
         logger.info(row['post_title'] + " 게시글 오픈")
+        time.sleep(1.5)
         try:
-            # get_btn_more = _driver_wait.until(
-            #     EC.presence_of_element_located((By.CSS_SELECTOR, "div.scope_comment button.btn_more")))
-            time.sleep(3)
             get_btn_more = _driver.find_element_by_css_selector(".btn_more")
             get_btn_more.click()
-        except Exception as e:
-            logger.info(e)
-        # finally:
-        #     _driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+            time.sleep(1.5)
+        except:
+            logger.info(row['post_title'] + " 더 보기 버튼 없음")
 
-        get_list_comment = _driver_wait.until(
-            EC.presence_of_all_elements_located((By.CSS_SELECTOR, ".list_comment li")))
+        # get_list_comment = _driver_wait.until(
+        #     EC.presence_of_all_elements_located((By.CSS_SELECTOR, ".list_comment li")))
+        get_list_comment = _driver.find_elements_by_css_selector(".list_comment li")
         try:
             check_reply = False
             # try:
@@ -244,6 +240,7 @@ def lambda_handler(event, context):
                                 AND reply.start_time <= NOW() 
                                 AND reply.end_time >= NOW()
                                 AND TIMESTAMPDIFF(SECOND, reply.execute_time, NOW()) >= interval_time*60
+                                AND owner_profile.cookie_status = '1' OR owner_profile.cookie_status = '3'                              
                                 """)
             rows = dbcur.fetchall()
             db.close()

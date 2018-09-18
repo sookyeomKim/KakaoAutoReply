@@ -46,19 +46,11 @@ def check_table_exists(db, table_name):
 
 
 def reply_executor(row):
-    logger.info(row['post_title'] + " 댓글 달기 시작")
     try:
         db = pymysql.connect(os.getenv('DB_HOST'), user=os.getenv('DB_USER'),
                              password=os.getenv('DB_PASSWD'), database=os.getenv('DB_DATABASE'), connect_timeout=5,
                              charset='utf8mb4', autocommit=True)
         dbcur = db.cursor(pymysql.cursors.DictCursor)
-        dbcur.execute("""SELECT * FROM `Channel` channel WHERE channel.id = '{}'""".format(row['channel_id']))
-        get_channel = dbcur.fetchone()
-        channel_name = get_channel['channel_title']
-
-        dbcur.execute(
-            """SELECT * FROM `auth_user` auth_user WHERE auth_user.id = '{}'""".format(get_channel['owner_id']))
-        get_user = dbcur.fetchone()
 
         chrome_options = webdriver.ChromeOptions()
         _tmp_folder = '/tmp/{}'.format(uuid.uuid4())
@@ -78,23 +70,18 @@ def reply_executor(row):
         chrome_options.add_argument('--headless')
         chrome_options.add_argument(
             '--no-sandbox')  # sandbox를 사용하지 않는다 보안 이슈가 있어 권고사항이 아니지만 크롤링목적으로 띄우는 브라우저에서는 딱히 무관한 이슈라고나 할까 무튼 헤드리스 동작시키려면 필수 옵션
-        chrome_options.add_argument('--disable-gpu')  # gpu를 사용x 윈도우에서는 실행 시 필요한 옵션
+        chrome_options.add_argument('--disable-gpu')  # gpu를 사용x 윈도우에서는 실행 시 필요한 옵션, for headless
         chrome_options.add_argument('--blink-settings=imagesEnabled=false')  # 이미지 방지
         chrome_options.add_argument('--window-size=1024x3072')
         chrome_options.add_argument("--disable-infobars")  # 정보바 끄기
         chrome_options.add_argument("--disable-extensions")  # 확장기능 끄기
         chrome_options.add_argument("--disable-dev-shm-usage")  # 리소스 제한 문제 끄기
-        chrome_options.add_argument('--user-data-dir={}'.format(_tmp_folder + '/user-data'))
-        chrome_options.add_argument('--hide-scrollbars')  # 스크롤 감추기
-        chrome_options.add_argument('--enable-logging')
-        chrome_options.add_argument('--log-level=0')
-        chrome_options.add_argument('--single-process')
-        chrome_options.add_argument('--data-path={}'.format(_tmp_folder + '/data-path'))
         chrome_options.add_argument('--ignore-certificate-errors')
+        chrome_options.add_argument('--single-process')  # problem : unable to discover open pages
         chrome_options.add_argument('--homedir={}'.format(_tmp_folder))
+        chrome_options.add_argument('--data-path={}'.format(_tmp_folder + '/data-path'))
+        chrome_options.add_argument('--user-data-dir={}'.format(_tmp_folder + '/user-data'))
         chrome_options.add_argument('--disk-cache-dir={}'.format(_tmp_folder + '/cache-dir'))
-        # chrome_options.add_argument(
-        #     'user-agent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/69.0.3497.92 Safari/537.36')
 
         chrome_options.binary_location = os.getcwd() + "/bin/headless-chromium"
 
@@ -140,6 +127,9 @@ def reply_executor(row):
         time.sleep(ran_num)
         _driver.get(row['post_url'])
 
+
+
+
         _driver.quit()
         db.close()
     except Exception as e:
@@ -161,29 +151,31 @@ def lambda_handler(event, context):
                     SELECT * FROM `auth_user` owner 
                     JOIN `auth_user_profile` profile 
                     ON owner.id = profile.user_id
-                    WHERE `username` NOT IN ('admin')
+                    WHERE owner.username NOT IN ('admin')
                     """)
             rows = dbcur.fetchall()
             db.close()
 
             logger.info("SUCCESS: Termination to RDS mysql instance succeeded")
-            logger.info("실행될 레코드 수 : " + str(len(rows)))
-
             for item in rows:
                 print(item)
 
-            # executor = concurrent.futures.ThreadPoolExecutor(10)
-            # futures = [executor.submit(reply_executor, row) for row in rows]
-            # concurrent.futures.wait(futures)
+            if not rows:
+                raise Exception("실행될 레코드가 없습니다.")
+
+            logger.info("실행될 레코드 수 : " + str(len(rows)))
+
+            executor = concurrent.futures.ThreadPoolExecutor(10)
+            futures = [executor.submit(reply_executor, row) for row in rows]
+            concurrent.futures.wait(futures)
+
+            return {
+                "statusCode": 200,
+                "body": json.dumps('SUCCESS')
+            }
         else:
-            logger.info("FAILED : no table")
             db.close()
-            sys.exit()
+            raise Exception("FAILED : no table")
     except Exception as e:
         logger.info(e)
         sys.exit()
-
-    return {
-        "statusCode": 200,
-        "body": json.dumps('SUCCESS')
-    }

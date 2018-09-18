@@ -1,0 +1,4 @@
+PyMySQL
+boto3
+selenium
+chromedriver-installer

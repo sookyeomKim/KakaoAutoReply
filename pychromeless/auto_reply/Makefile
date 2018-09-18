@@ -28,6 +28,6 @@ build-lambda-package: clean
 	cp -r bin build/.
 	cp -r lib build/.
 	pip install -r requirements.txt -t build/lib/.
-	cd build; zip -9qr build.zip .
-	cp build/build.zip .
+	cd build; zip -9qr kakao_auto_reply.zip .
+	cp build/kakao_auto_reply.zip .
 	rm -rf build

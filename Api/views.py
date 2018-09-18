@@ -64,9 +64,6 @@ def check_cookie(request):
             result['cookie_state'] = "2"
             logger.info(e)
             logger.info("쿠키가 존재하지 않습니다.")
-        finally:
-            user.profile.cookie_status = result['cookie_state']
-            user.save()
     except Exception as e:
         logger.info(e)
         result["status"] = False
