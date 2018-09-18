@@ -18,6 +18,11 @@ from Channel.models import Channel
 class ChannelLV(ListView):
     model = Channel
 
+    def get_queryset(self):
+        queryset = super(ChannelLV, self).get_queryset()
+        queryset = queryset.filter(owner=self.request.user)
+        return queryset
+
 
 def renew_channel(request):
     success = True

@@ -10,10 +10,10 @@ settings.ini
 uploads/
 static/
 
-pychromeless/docker-compose.yml
-pychromeless/test.py
-pychromeless/build.zip
-pychromeless/bin/
+pychromeless/*/docker-compose.yml
+pychromeless/*/test.py
+pychromeless/*/build.zip
+pychromeless/*/bin/
 Channel/__pycache__/
 Channel/migrations/__pycache__/
 FileUpload/__pycache__/
@@ -23,5 +23,5 @@ Post/__pycache__/
 Post/migrations/__pycache__/
 Reply/__pycache__/
 Reply/migrations/__pycache__/
-
-
+Api/__pycache__/
+Api/migrations/__pycache__/

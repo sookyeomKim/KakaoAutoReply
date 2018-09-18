@@ -139,93 +139,9 @@ def reply_executor(row):
         ran_num = float(ran_num) + round(float((random.randint(0, 10) / 10)), 1)
         time.sleep(ran_num)
         _driver.get(row['post_url'])
-        logger.info(row['post_title'] + " 게시글 오픈")
-        try:
-            # get_btn_more = _driver_wait.until(
-            #     EC.presence_of_element_located((By.CSS_SELECTOR, "div.scope_comment button.btn_more")))
-            time.sleep(3)
-            get_btn_more = _driver.find_element_by_css_selector(".btn_more")
-            get_btn_more.click()
-        except Exception as e:
-            logger.info(e)
-        # finally:
-        #     _driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
 
-        get_list_comment = _driver_wait.until(
-            EC.presence_of_all_elements_located((By.CSS_SELECTOR, ".list_comment li")))
-        try:
-            check_reply = False
-            # try:
-            #     # 첫 댓글 이모티콘인지 체크
-            #     get_list_comment[0].find_element_by_css_selector(
-            #         ".post_comment > .info_story > div > .channel_emoticon")
-            #     logger.info(row['post_title'] + " 첫 댓글 이모티콘 ok")
-            # except:
-            #     raise Exception(row['post_title'] + " 첫 댓글 이모티콘 no")
-
-            get_box_text = _driver.find_element_by_css_selector(".box_text")
-            get_box_text.click()
-
-            _driver.execute_script("arguments[0].innerHTML = arguments[1];", get_box_text,
-                                   html.unescape(row['content']))
-            time.sleep(1)
-
-            for comment in get_list_comment:
-                # 댓글이 이모티콘인 유저만 콜
-                try:
-                    get_link_title = comment.find_element_by_css_selector(
-                        ".link_title")
-
-                    if channel_name == get_link_title.text:
-                        logger.info(row['post_title'] + " 댓글 달기 종료")
-                        break
-
-                    try:
-                        comment.find_element_by_css_selector(
-                            ".channel_emoticon")
-                    except:
-                        raise Exception(row['post_title'] + " 이모티콘 아닌건 패스")
-
-                    get_link_title.click()
-                    check_reply = True
-                except Exception as e:
-                    logger.info(e)
-
-            if not check_reply:
-                raise Exception(row['post_title'] + " 댓글 안 달림")
-
-            time.sleep(1)
-
-            get_submit_button = _driver.find_element_by_css_selector(".btn_type2")
-            get_submit_button.click()
-        except Exception as e:
-            logger.info(e)
-        finally:
-            _driver.quit()
-            dbcur.execute(
-                """
-                UPDATE `Post` post
-                JOIN `Reply` reply
-                ON post.id = reply.post_id
-                SET reply.execute_time = NOW()
-                WHERE post.id = '{}'
-                """.format(row['id']))
-            db.close()
-            # ran_num 다시 ready 상태로
-            random_num_dict[ran_num] = "ready"
-
-            # Remove specific tmp dir of this "run"
-            shutil.rmtree(_tmp_folder)
-
-            # Remove possible core dumps
-            folder = '/tmp'
-            for the_file in os.listdir(folder):
-                file_path = os.path.join(folder, the_file)
-                try:
-                    if 'core.headless-chromi' in file_path and os.path.exists(file_path) and os.path.isfile(file_path):
-                        os.unlink(file_path)
-                except Exception as e:
-                    logger.info(e)
+        _driver.quit()
+        db.close()
     except Exception as e:
         logger.info(e)
         sys.exit()
@@ -242,13 +158,10 @@ def lambda_handler(event, context):
         if check_table_exists(db, 'Post'):
             dbcur = db.cursor(pymysql.cursors.DictCursor)
             dbcur.execute("""
-                    SELECT * FROM `Post` post 
-                    JOIN `Reply` reply 
-                    ON post.id = reply.post_id
-                    WHERE `trigger` IS TRUE 
-                    AND `start_time` <= NOW() 
-                    AND `end_time` >= NOW()
-                    AND TIMESTAMPDIFF(SECOND, reply.execute_time, NOW()) >= interval_time*60
+                    SELECT * FROM `auth_user` owner 
+                    JOIN `auth_user_profile` profile 
+                    ON owner.id = profile.user_id
+                    WHERE `username` NOT IN ('admin')
                     """)
             rows = dbcur.fetchall()
             db.close()
@@ -256,9 +169,12 @@ def lambda_handler(event, context):
             logger.info("SUCCESS: Termination to RDS mysql instance succeeded")
             logger.info("실행될 레코드 수 : " + str(len(rows)))
 
-            executor = concurrent.futures.ThreadPoolExecutor(10)
-            futures = [executor.submit(reply_executor, row) for row in rows]
-            concurrent.futures.wait(futures)
+            for item in rows:
+                print(item)
+
+            # executor = concurrent.futures.ThreadPoolExecutor(10)
+            # futures = [executor.submit(reply_executor, row) for row in rows]
+            # concurrent.futures.wait(futures)
         else:
             logger.info("FAILED : no table")
             db.close()

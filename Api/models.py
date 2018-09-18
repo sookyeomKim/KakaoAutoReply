@@ -19,8 +19,9 @@ class Status(Enum):
 class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     cookie_status = EnumField(Status, max_length=1, default=Status.EMPTY)
+    # TODO 암호화할 수 있는 방법 찾기
+    kakao_passwd = models.CharField(max_length=128)
     modify_date = models.DateTimeField(auto_now=True)
-
 
     class Meta:
         db_table = 'auth_user_profile'

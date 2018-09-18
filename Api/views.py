@@ -48,12 +48,14 @@ def check_cookie(request):
 
                 activate_time_second = activate_time.total_seconds()
 
-                if activate_time_second < 10800:  # 인증시간이 거의 끝나감
-                    result['cookie_state'] = "3"
+                print(activate_time_second)
+
+                if activate_time_second <= 0:  # 인증이 만료됨
+                    result['cookie_state'] = "0"
                 elif activate_time_second >= 10800:  # 인증 중
                     result['cookie_state'] = "1"
-                elif activate_time_second <= 0:  # 인증이 만료됨
-                    result['cookie_state'] = "0"
+                elif activate_time_second < 10800:  # 인증시간이 거의 끝나감
+                    result['cookie_state'] = "3"
             except Exception as e:
                 result['cookie_state'] = "4"
                 logger.info(e)
