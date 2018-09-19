@@ -34,7 +34,7 @@
                 <li class="nav-item"><a href="{% url 'Channel:index' %}" class="nav-link">채널</a></li>
             </ul>
             <ul class="navbar-nav justify-content-end">
-                <li class="nav-item"><span class="nav-link" id="cookie_state"></span></li>
+                <li class="nav-item"><span class="nav-link" id="cookie_status"></span></li>
                 <li class="nav-item"><a href="{% url 'FileUpload:index' %}" class="nav-link">쿠키 수동 등록</a></li>
             </ul>
             <form class="form-inline my-2 my-lg-0">
@@ -112,11 +112,11 @@
                 check_cookie();
                 setInterval(function () {
                     check_cookie();
-                }, 3600000)
+                }, 10000)
             }
 
             function check_cookie() {
-                var cookie_state = "관리자에게 문의";
+                var cookie_status = "관리자에게 문의";
                 var state_class = "text-danger";
                 $.ajax({
                     dataType: 'json',
@@ -126,27 +126,27 @@
                     }
                 }).done(function (data) {
                     if (data['status']) {
-                        if (data['cookie_state'] === "0") {
-                            cookie_state = "비활성화 중";
+                        if (data['cookie_status'] === "0") {
+                            cookie_status = "비활성화 중";
                             state_class = "text-muted";
-                        } else if (data['cookie_state'] === "1") {
-                            cookie_state = "활성화 중";
+                        } else if (data['cookie_status'] === "1") {
+                            cookie_status = "활성화 중";
                             state_class = "text-success";
-                        } else if (data['cookie_state'] === "2") {
-                            cookie_state = "인증파일 없음";
+                        } else if (data['cookie_status'] === "2") {
+                            cookie_status = "인증파일 없음";
                             state_class = "text-primary";
-                        } else if (data['cookie_state'] === "3") {
-                            cookie_state = "곧 인증 만료";
+                        } else if (data['cookie_status'] === "3") {
+                            cookie_status = "곧 인증 만료";
                             state_class = "text-warning";
-                        } else if (data['cookie_state'] === "4") {
-                            cookie_state = "인증 에러";
+                        } else if (data['cookie_status'] === "4") {
+                            cookie_status = "인증 에러";
                             state_class = "text-danger";
                         }
 
                     }
-                    $("#cookie_state").text(cookie_state).addClass(state_class)
+                    $("#cookie_status").text(cookie_status).addClass(state_class)
                 }).fail(function () {
-                    $("#cookie_state").text(cookie_state).addClass(state_class)
+                    $("#cookie_status").text(cookie_status).addClass(state_class)
                 })
             }
         })

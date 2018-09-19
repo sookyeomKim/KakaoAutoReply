@@ -39,9 +39,9 @@ class ReplyUV(UpdateView):
         pk = self.kwargs['pk2']
         return Post.objects.get(id=pk).reply
 
-    def form_valid(self, form):
-        form.instance.execute_time = form.instance.start_time
-        return super(ReplyUV, self).form_valid(form)
+    # def form_valid(self, form):
+    #     form.instance.execute_time = form.instance.start_time
+    #     return super(ReplyUV, self).form_valid(form)
 
     def get_success_url(self):
         channel_id = self.kwargs['pk']

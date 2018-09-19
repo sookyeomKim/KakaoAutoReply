@@ -1,14 +1,11 @@
 import logging
-from datetime import datetime
-
 from django.contrib.auth.models import User
 import json
-import _pickle as c_pickle
-from decouple import config
 from django.http import HttpResponse
-import boto3
+from enumfields.fields import EnumFieldMixin
 
-# Create your views here.
+from Api.models import Status
+
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
@@ -21,49 +18,18 @@ def check_cookie(request):
     try:
         user_id = request.GET.get('user_id')
         user = User.objects.get(pk=user_id)
-        username = user.username
+        cookie_status = user.profile.cookie_status
 
-        s3_client = boto3.client('s3', region_name='ap-northeast-2',
-                                 aws_access_key_id=config('AWS_ACCESS_KEY_ID'),
-                                 aws_secret_access_key=config('AWS_SECRET_ACCESS_KEY'))
-
-        try:
-            s3_response = s3_client.get_object(Bucket=config('AWS_STORAGE_BUCKET_NAME'),
-                                               Key='uploads/cookies/' + username.replace('@', '') + '.pkl')
-            get_cookies = s3_response['Body'].read()
-            get_cookie_list = c_pickle.loads(get_cookies)
-
-            # 쿠키 생성 시간 + 1day - 3hour = expire_datetime_1
-            # *카카오가 왜 -3시간을 했는지는 모르겠네 멀까
-            try:
-                expire_datetime_1 = datetime.fromtimestamp(int(get_cookie_list[0]['value']))
-
-                # 쿠기 생성 시간 + 1day = expire_datetime_2(로그인 유지 체크 해제)
-                # 쿠기 생성 시간 + 1month = expire_datetime_2(로그인 유지 체크 설정)
-                expire_datetime_2 = datetime.fromtimestamp(int(get_cookie_list[3]['value']))
-
-                current_time = datetime.now()
-
-                activate_time = expire_datetime_1 - current_time
-
-                activate_time_second = activate_time.total_seconds()
-
-                print(activate_time_second)
-
-                if activate_time_second <= 0:  # 인증이 만료됨
-                    result['cookie_state'] = "0"
-                elif activate_time_second >= 10800:  # 인증 중
-                    result['cookie_state'] = "1"
-                elif activate_time_second < 10800:  # 인증시간이 거의 끝나감
-                    result['cookie_state'] = "3"
-            except Exception as e:
-                result['cookie_state'] = "4"
-                logger.info(e)
-                logger.info("인증되지 않은 쿠키입니다.")
-        except Exception as e:
-            result['cookie_state'] = "2"
-            logger.info(e)
-            logger.info("쿠키가 존재하지 않습니다.")
+        if cookie_status is Status.DEACTIVATE:
+            result['cookie_status'] = "0"
+        elif cookie_status is Status.ACTIVATE:
+            result['cookie_status'] = "1"
+        elif cookie_status is Status.EMPTY:
+            result['cookie_status'] = "2"
+        elif cookie_status is Status.WARNING:
+            result['cookie_status'] = "3"
+        elif cookie_status is Status.ERROR:
+            result['cookie_status'] = "4"
     except Exception as e:
         logger.info(e)
         result["status"] = False

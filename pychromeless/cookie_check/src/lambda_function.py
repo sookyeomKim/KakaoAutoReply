@@ -50,14 +50,14 @@ def reply_executor(row):
 
             get_cookie_list = c_pickle.loads(get_cookies)
 
-            # 쿠키 생성 시간 + 1day - 3hour = expire_datetime_1
-            # *카카오가 왜 -3시간을 했는지는 모르겠네 멀까
             try:
+                # 쿠키 생성 시간 + 1day - 3hour = expire_datetime_1
+                # *카카오가 왜 -3시간을 했는지는 모르겠네 멀까
                 expire_datetime_1 = datetime.fromtimestamp(int(get_cookie_list[0]['value']))
 
                 # 쿠기 생성 시간 + 1day = expire_datetime_2(로그인 유지 체크 해제)
                 # 쿠기 생성 시간 + 1month = expire_datetime_2(로그인 유지 체크 설정)
-                expire_datetime_2 = datetime.fromtimestamp(int(get_cookie_list[3]['value']))
+                # expire_datetime_2 = datetime.fromtimestamp(int(get_cookie_list[1]['value']))
 
                 current_time = datetime.now()
 

@@ -77,6 +77,9 @@ def reply_executor(row):
         chrome_options.add_argument('--user-data-dir={}'.format(_tmp_folder + '/user-data'))
         chrome_options.add_argument('--disk-cache-dir={}'.format(_tmp_folder + '/cache-dir'))
 
+        chrome_options.add_argument(
+            "--user-agent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/69.0.3497.92 Safari/537.36")
+
         chrome_options.binary_location = os.getcwd() + "/bin/headless-chromium"
 
         _driver = webdriver.Chrome(chrome_options=chrome_options)

@@ -28,6 +28,6 @@ build-lambda-package: clean
 	cp -r bin build/.
 	cp -r lib build/.
 	pip install -r requirements.txt -t build/lib/.
-	cd build; zip -9qr build.zip .
-	cp build/build.zip .
+	cd build; zip -9qr cookie_refresh.zip .
+	cp build/cookie_refresh.zip .
 	rm -rf build
