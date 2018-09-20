@@ -16,11 +16,6 @@ import pymysql
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
-random_num_dict = {}
-for i in range(2, 36, 3):
-    random_num_dict[i] = 'ready'
-
-
 def check_table_exists(db, table_name):
     dbcur = db.cursor()
     dbcur.execute("""
@@ -36,7 +31,7 @@ def check_table_exists(db, table_name):
     return False
 
 
-def reply_executor(row):
+def check_executor(row):
     try:
         cookie_state = "2"
         session = boto3.session.Session(aws_access_key_id=os.getenv('ACCESS_KEY_ID'),
@@ -92,7 +87,7 @@ def reply_executor(row):
                 WHERE owner.id = '{0}'
                 """.format(row['id'], cookie_state))
             db.close()
-            logger.info(row['username']+" 상태 갱신 완료")
+            logger.info(row['username'] + " 상태 갱신 완료")
     except Exception as e:
         logger.info(e)
         sys.exit()
@@ -125,7 +120,7 @@ def lambda_handler(event, context):
             logger.info("실행될 레코드 수 : " + str(len(rows)))
 
             executor = concurrent.futures.ThreadPoolExecutor(10)
-            futures = [executor.submit(reply_executor, row) for row in rows]
+            futures = [executor.submit(check_executor, row) for row in rows]
             concurrent.futures.wait(futures)
 
             return {

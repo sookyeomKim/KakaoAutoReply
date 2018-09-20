@@ -27,8 +27,6 @@ logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
 random_num_dict = {}
-for i in range(2, 36, 3):
-    random_num_dict[i] = 'ready'
 
 
 def check_table_exists(db, table_name):
@@ -46,7 +44,7 @@ def check_table_exists(db, table_name):
     return False
 
 
-def reply_executor(row):
+def refresh_executor(row):
     try:
         # db = pymysql.connect(os.getenv('DB_HOST'), user=os.getenv('DB_USER'),
         #                      password=os.getenv('DB_PASSWD'), database=os.getenv('DB_DATABASE'), connect_timeout=5,
@@ -89,7 +87,7 @@ def reply_executor(row):
 
         _driver = webdriver.Chrome(chrome_options=chrome_options)
         _driver_wait = WebDriverWait(_driver, 10)
-
+        print(random_num_dict)
         while True:
             ran_num = list(random_num_dict)[random.randrange(len(random_num_dict) - 1)]
             check_rn_status = random_num_dict[ran_num]
@@ -98,6 +96,7 @@ def reply_executor(row):
                 break
 
         ran_num = float(ran_num) + round(float((random.randint(0, 10) / 10)), 1)
+        print(ran_num)
         time.sleep(ran_num)
 
         _driver.get("https://accounts.kakao.com/login/kakaostory")
@@ -161,8 +160,16 @@ def lambda_handler(event, context):
 
             logger.info("실행될 레코드 수 : " + str(len(rows)))
 
+            max_loop_count = 10
+            rows_length = len(rows)
+            if rows_length > max_loop_count:
+                rows_length = max_loop_count
+            count = rows_length * 3 + 3
+            for i in range(2, count, 3):
+                random_num_dict[i] = 'ready'
+
             executor = concurrent.futures.ThreadPoolExecutor(10)
-            futures = [executor.submit(reply_executor, row) for row in rows]
+            futures = [executor.submit(refresh_executor, row) for row in rows]
             concurrent.futures.wait(futures)
 
             return {

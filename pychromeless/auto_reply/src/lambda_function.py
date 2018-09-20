@@ -24,8 +24,6 @@ logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
 random_num_dict = {}
-for i in range(2, 36, 3):
-    random_num_dict[i] = 'ready'
 
 
 def check_table_exists(db, table_name):
@@ -83,7 +81,6 @@ def reply_executor(row):
         chrome_options.binary_location = os.getcwd() + "/bin/headless-chromium"
 
         _driver = webdriver.Chrome(chrome_options=chrome_options)
-        _driver_wait = WebDriverWait(_driver, 10)
 
         _driver.get(
             "https://accounts.kakao.com/login?continue=https%3A%2F%2Faccounts.kakao.com%2Fweblogin%2Faccount%2Finfo")
@@ -119,9 +116,11 @@ def reply_executor(row):
             if check_rn_status is "ready":
                 random_num_dict[ran_num] = "working"
                 break
-        # ran_num = ran_num + float(decimal.Decimal(random.randrange(0, 10)) / 10)
+
         ran_num = float(ran_num) + round(float((random.randint(0, 10) / 10)), 1)
+
         time.sleep(ran_num)
+
         _driver.get(row['post_url'])
         logger.info(row['post_title'] + " 게시글 오픈")
         time.sleep(1.5)
@@ -135,6 +134,8 @@ def reply_executor(row):
         # get_list_comment = _driver_wait.until(
         #     EC.presence_of_all_elements_located((By.CSS_SELECTOR, ".list_comment li")))
         get_list_comment = _driver.find_elements_by_css_selector(".list_comment li")
+
+        # TODO 최적화가 필요하다... 가끔 댓글이 2개 달린다. 처음만!
         try:
             check_reply = False
             # try:
@@ -255,7 +256,15 @@ def lambda_handler(event, context):
 
             logger.info("실행될 레코드 수 : " + str(len(rows)))
 
-            executor = concurrent.futures.ThreadPoolExecutor(10)
+            max_loop_count = 10
+            rows_length = len(rows)
+            if rows_length > max_loop_count:
+                rows_length = max_loop_count
+            count = rows_length * 3 + 3
+            for i in range(2, count, 3):
+                random_num_dict[i] = 'ready'
+
+            executor = concurrent.futures.ThreadPoolExecutor(max_loop_count)
             futures = [executor.submit(reply_executor, row) for row in rows]
             concurrent.futures.wait(futures)
 
