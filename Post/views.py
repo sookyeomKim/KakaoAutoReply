@@ -1,4 +1,5 @@
 import json
+import logging
 import boto3
 import _pickle as c_pickle
 import pytz
@@ -18,6 +19,9 @@ from Channel.models import Channel
 from Post.models import Post
 
 from django.views.generic import ListView
+
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
 
 class PostLV(ListView):
     model = Post
@@ -43,7 +47,12 @@ class PostLV(ListView):
 
 
 def renew_post(request, pk):
+    username = request.user.username
+    channel_id = pk
+    channel_url = request.GET.get('channel_url')
+
     success = True
+
     options = webdriver.ChromeOptions()
     options.add_argument('--headless')
     options.add_argument('--blink-settings=imagesEnabled=false')
@@ -55,14 +64,10 @@ def renew_post(request, pk):
         "--user-agent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_2) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/64.0.3282.140 Safari/537.36")
     chrome_driver = webdriver.Chrome(chrome_options=options)
     chrome_driver_wait = WebDriverWait(chrome_driver, 30)
+
     try:
-        channel_id = pk
-        channel_url = request.GET.get('channel_url')
-        username = request.user.username
-
-        print("웹드라이버 시작 완료")
-
         chrome_driver.get("https://accounts.kakao.com")
+
         s3_client = boto3.client('s3', region_name='ap-northeast-2',
                                  aws_access_key_id=config('AWS_ACCESS_KEY_ID'),
                                  aws_secret_access_key=config('AWS_SECRET_ACCESS_KEY'))
@@ -70,12 +75,8 @@ def renew_post(request, pk):
                                            Key='uploads/cookies/' + username.replace('@', '') + '.pkl')
         get_cookies = s3_response['Body'].read()
 
-        # for cookie in pickle.load(open("./uploads/cookies/" + username + ".pkl", "rb")):
         for cookie in c_pickle.loads(get_cookies):
             chrome_driver.add_cookie(cookie)
-        # pickle_byte_obj = c_pickle.dumps(chrome_driver.get_cookies())
-        # s3_client.put_object(Bucket='kakao-auto-reply', Body=pickle_byte_obj,
-        #                      Key='uploads/cookies/' + username.replace('@', '') + '.pkl')
 
         chrome_driver.get(channel_url)
 
@@ -87,6 +88,7 @@ def renew_post(request, pk):
 
         post_post_list = chrome_driver_wait.until(
             EC.presence_of_all_elements_located((By.CSS_SELECTOR, ".story_channel")))
+
         for item in post_post_list:
             post_title = item.find_element_by_css_selector(".tit_story").text
             get_register_date = item.find_element_by_css_selector(".link_date").text
@@ -123,9 +125,8 @@ def renew_post(request, pk):
                 post.save()
 
     except Exception as e:
-        print(e)
+        logger.info(e)
         success = False
     finally:
-        # pass
         chrome_driver.close()
     return HttpResponse(json.dumps(success), content_type="application/json")

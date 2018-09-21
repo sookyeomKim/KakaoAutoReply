@@ -1,4 +1,5 @@
 import json
+import logging
 import _pickle as c_pickle
 from decouple import config
 from django.core.exceptions import ObjectDoesNotExist
@@ -14,6 +15,9 @@ from django.views.generic import ListView
 
 from Channel.models import Channel
 
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
+
 
 class ChannelLV(ListView):
     model = Channel
@@ -25,7 +29,10 @@ class ChannelLV(ListView):
 
 
 def renew_channel(request):
+    username = request.user.username
+
     success = True
+
     options = webdriver.ChromeOptions()
     options.add_argument('--headless')
     options.add_argument('--blink-settings=imagesEnabled=false')
@@ -37,11 +44,8 @@ def renew_channel(request):
         "--user-agent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_2) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/64.0.3282.140 Safari/537.36")
     chrome_driver = webdriver.Chrome(chrome_options=options)
     chrome_driver_wait = WebDriverWait(chrome_driver, 30)
+
     try:
-        username = request.user.username
-
-        print("웹드라이버 시작 완료")
-
         chrome_driver.get("https://accounts.kakao.com")
 
         s3_client = boto3.client('s3', region_name='ap-northeast-2',
@@ -51,12 +55,14 @@ def renew_channel(request):
                                            Key='uploads/cookies/' + username.replace('@', '') + '.pkl')
         get_cookies = s3_response['Body'].read()
 
-        # for cookie in pickle.load(open("./uploads/cookies/" + username + ".pkl", "rb")):
         for cookie in c_pickle.loads(get_cookies):
             chrome_driver.add_cookie(cookie)
+
         chrome_driver.get('https://ch.kakao.com/channels')
+
         channel_card_list = chrome_driver_wait.until(
             EC.presence_of_all_elements_located((By.CSS_SELECTOR, ".section_mychannel > .list_section > li")))
+
         for item in channel_card_list:
             channel_title = item.find_element_by_css_selector(".tit_subject").text
             channel_url = item.find_element_by_css_selector(".link_card").get_attribute("href")
@@ -97,8 +103,9 @@ def renew_channel(request):
                     owner_id=owner_id
                 )
                 channel.save()
+
     except Exception as e:
-        print(e)
+        logger.info(e)
         success = False
     finally:
         chrome_driver.close()

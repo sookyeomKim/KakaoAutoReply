@@ -14,7 +14,7 @@ from Reply.models import Reply
 class ReplyCV(CreateView, DetailView):
     # model = Post
     form_class = CreateForm
-    template_name = "reply/reply_create_form.html"
+    template_name = "Reply/reply_create_form.html"
 
     def get_object(self, queryset=None):
         pk = self.kwargs['pk2']
@@ -33,7 +33,7 @@ class ReplyCV(CreateView, DetailView):
 
 class ReplyUV(UpdateView):
     form_class = UpdateForm
-    template_name = "reply/reply_update_form.html"
+    template_name = "Reply/reply_update_form.html"
 
     def get_object(self, queryset=None):
         pk = self.kwargs['pk2']
