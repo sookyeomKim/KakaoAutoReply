@@ -7,8 +7,12 @@
 out
 gen
 settings.ini
+.env
+
 uploads/
 static/
+node_modules
+webpack-stats.json
 
 pychromeless/*/docker-compose.yml
 pychromeless/*/test.py
@@ -28,3 +32,4 @@ Api/migrations/__pycache__/
 pychromeless/auto_reply/src/__pycache__/
 pychromeless/cookie_check/src/__pycache__/
 pychromeless/cookie_refresh/src/__pycache__/
+

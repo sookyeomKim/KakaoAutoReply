@@ -36,6 +36,7 @@ def lambda_handler(event, context):
             dbcur.execute("""
                                 SELECT * FROM `Reply` reply
                                 WHERE reply.end_time < NOW()
+                                AND reply.trigger = TRUE
                                 """)
 
             rows = dbcur.fetchall()

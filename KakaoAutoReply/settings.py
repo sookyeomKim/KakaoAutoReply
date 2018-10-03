@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     'Api.apps.ApiConfig',
 
     'storages',
+    'webpack_loader'
 ]
 
 MIDDLEWARE = [
@@ -150,3 +151,13 @@ STATICFILES_DIRS = [
 STATIC_URL = 'https://%s/%s/' % (AWS_S3_CUSTOM_DOMAIN, AWS_LOCATION)
 STATICFILES_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
 DEFAULT_FILE_STORAGE = 'KakaoAutoReply.storage_backends.UploadStorage'
+
+WEBPACK_LOADER = {
+    'DEFAULT': {
+        'CACHE': not DEBUG,
+        'BUNDLE_DIR_NAME': 'bundles/',  # must end with slash
+        'STATS_FILE': os.path.join(BASE_DIR, 'webpack-stats.json'),
+        'POLL_INTERVAL': 0.1,
+        'TIMEOUT': None
+    }
+}
