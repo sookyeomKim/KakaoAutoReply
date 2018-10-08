@@ -4,6 +4,7 @@
 {% block style %}
 {% endblock %}
 {% block content %}
+
     <div class="row justify-content-center">
         <div class="card">
             <h2 class="card-header">
@@ -42,6 +43,15 @@
         (function ($) {
             $(document).ready(function () {
 
+                $("#start_time").datetimepicker({format: 'YYYY-MM-DD HH:mm:ss'}).on("dp.change", function (e) {
+                    $('#end_time').data("DateTimePicker").minDate(e.date);
+                });
+                $('#end_time').datetimepicker({
+                    format: 'YYYY-MM-DD HH:mm:ss',
+                    useCurrent: false
+                }).on("dp.change", function (e) {
+                    $('#start_time').data("DateTimePicker").maxDate(e.date);
+                });
             });
         })(jQuery)
     </script>

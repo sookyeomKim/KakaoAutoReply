@@ -1,8 +1,12 @@
 <!DOCTYPE html>
 <html lang="ko-kr">
 <head>
-    <meta charset="UTF-8">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <title>{% block title %}Kakao auto reply{% endblock %}</title>
+    <link rel="stylesheet" type="text/css"
+          href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700|Roboto+Slab:400,700|Material+Icons"/>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/latest/css/font-awesome.min.css">
     {% load render_bundle from webpack_loader %}
     {% render_bundle 'vendor' 'css' %}
 
@@ -23,40 +27,45 @@
 </head>
 <body>
 <header>
-    <nav class="navbar navbar-expand-lg navbar-light bg-light">
-        <a class="navbar-brand" href="/">댓글자동 오지게</a>
-        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent"
-                aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-
-        <div class="collapse navbar-collapse" id="navbarSupportedContent">
-            <ul class="navbar-nav mr-auto">
-                <li class="nav-item"><a href="{% url 'Channel:index' %}" class="nav-link">채널</a></li>
-            </ul>
-            <ul class="navbar-nav justify-content-end">
-                <li class="nav-item"><span class="nav-link" id="cookie_status"></span></li>
-                <li class="nav-item"><a href="{% url 'FileUpload:index' %}" class="nav-link">쿠키 수동 등록</a></li>
-            </ul>
-            <form class="form-inline my-2 my-lg-0">
+    <nav class="navbar navbar-expand-lg bg-primary">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/">댓글자동 오지게</a>
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavDropdown"
+                    aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="navbar-toggler-icon"></span>
+                <span class="navbar-toggler-icon"></span>
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNavDropdown">
                 <ul class="navbar-nav mr-auto">
-                    {% if user.is_active %}
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button"
-                               data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                {% firstof user.get_short_name user.get_username %}
-                            </a>
-                            <div class="dropdown-menu" aria-labelledby="navbarDropdown">
-                                <a class="dropdown-item" href="{% url 'password_change' %}">비밀번호 변경</a>
-                                <a class="dropdown-item" href="{% url 'logout' %}">로그아웃</a>
-                            </div>
-                        </li>
-                    {% else %}
-                        <li class="nav-item"><a href="{% url 'login' %}" class="nav-link">로그인</a></li>
-                        <li class="nav-item"><a href="{% url 'register' %}" class="nav-link">회원가입</a></li>
-                    {% endif %}
+                    <li class="nav-item"><a href="{% url 'Channel:index' %}" class="nav-link">채널</a></li>
                 </ul>
-            </form>
+
+                <ul class="navbar-nav justify-content-end">
+                    <li class="nav-item"><span class="nav-link" id="cookie_status"></span></li>
+                </ul>
+                <form class="form-inline my-2 my-lg-0">
+                    <ul class="navbar-nav mr-auto">
+                        {% if user.is_active %}
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button"
+                                   data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                    {% firstof user.get_short_name user.get_username %}
+                                </a>
+                                <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+                                    <a class="dropdown-item" href="{% url 'FileUpload:index' %}">쿠키 수동 등록</a>
+                                    <a class="dropdown-item" href="{% url 'password_change' %}">비밀번호 변경</a>
+                                    <a class="dropdown-item" href="{% url 'logout' %}">로그아웃</a>
+                                </div>
+                            </li>
+                        {% else %}
+                            <li class="nav-item"><a href="{% url 'login' %}" class="nav-link">로그인</a></li>
+                            <li class="nav-item"><a href="{% url 'register' %}" class="nav-link">회원가입</a></li>
+                        {% endif %}
+                    </ul>
+                </form>
+            </div>
         </div>
     </nav>
 </header>

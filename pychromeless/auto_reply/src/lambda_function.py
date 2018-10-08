@@ -18,6 +18,7 @@ import boto3.session
 import pymysql
 
 from selenium import webdriver
+from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.wait import WebDriverWait
 
 logger = logging.getLogger()
@@ -42,7 +43,7 @@ def check_table_exists(db, table_name):
 
 
 def reply_executor(row):
-    logger.info(row['post_title'] + " 댓글 달기 시작")
+    logger.info(row['channel_title'] + " - " + row['post_title'] + " 댓글 달기 시작")
     try:
         chrome_options = webdriver.ChromeOptions()
         _tmp_folder = '/tmp/{}'.format(uuid.uuid4())
@@ -84,19 +85,16 @@ def reply_executor(row):
 
         _driver.get(
             "https://accounts.kakao.com/login?continue=https%3A%2F%2Faccounts.kakao.com%2Fweblogin%2Faccount%2Finfo")
-        try:
-            # 동시 처리할 경우 endpoint_resolved 에러 발생
-            # 개별 세션을 만들어줘서 s3연결 처리
-            session = boto3.session.Session(aws_access_key_id=os.getenv('ACCESS_KEY_ID'),
-                                            aws_secret_access_key=os.getenv('SECRET_ACCESS_KEY'),
-                                            region_name='ap-northeast-2')
-            s3_client = session.client('s3')
-            s3_response = s3_client.get_object(Bucket=os.getenv('STORAGE_BUCKET_NAME'),
-                                               Key='uploads/cookies/' + row['username'].replace("@", "") + '.pkl')
-            get_cookies = s3_response['Body'].read()
-        except Exception as e:
-            logger.info(e)
-            raise
+
+        # 동시 처리할 경우 endpoint_resolved 에러 발생
+        # 개별 세션을 만들어줘서 s3연결 처리
+        session = boto3.session.Session(aws_access_key_id=os.getenv('ACCESS_KEY_ID'),
+                                        aws_secret_access_key=os.getenv('SECRET_ACCESS_KEY'),
+                                        region_name='ap-northeast-2')
+        s3_client = session.client('s3')
+        s3_response = s3_client.get_object(Bucket=os.getenv('STORAGE_BUCKET_NAME'),
+                                           Key='uploads/cookies/' + row['username'].replace("@", "") + '.pkl')
+        get_cookies = s3_response['Body'].read()
 
         # for cookie in pickle.load(open("./uploads/cookies/" + username + ".pkl", "rb")):
         for cookie in c_pickle.loads(get_cookies):
@@ -122,35 +120,39 @@ def reply_executor(row):
         time.sleep(ran_num)
 
         _driver.get(row['post_url'])
-        logger.info(row['post_title'] + " 게시글 오픈")
+        logger.info(row['channel_title'] + " - " + row['post_title'] + " 게시글 오픈")
         time.sleep(1.5)
         try:
             get_btn_more = _driver.find_element_by_css_selector(".btn_more")
             get_btn_more.click()
             time.sleep(1.5)
         except:
-            logger.info(row['post_title'] + " 더 보기 버튼 없음")
+            logger.info(row['channel_title'] + " - " + row['post_title'] + " 더 보기 버튼 없음")
 
         # get_list_comment = _driver_wait.until(
         #     EC.presence_of_all_elements_located((By.CSS_SELECTOR, ".list_comment li")))
         get_list_comment = _driver.find_elements_by_css_selector(".list_comment li")
 
-        # TODO 최적화가 필요하다... 가끔 댓글이 2개 달린다. 처음만!
         try:
             check_reply = False
             # try:
             #     # 첫 댓글 이모티콘인지 체크
             #     get_list_comment[0].find_element_by_css_selector(
             #         ".post_comment > .info_story > div > .channel_emoticon")
-            #     logger.info(row['post_title'] + " 첫 댓글 이모티콘 ok")
+            #     logger.info(row['channel_title]+" - +row['post_title'] + " 첫 댓글 이모티콘 ok")
             # except:
-            #     raise Exception(row['post_title'] + " 첫 댓글 이모티콘 no")
+            #     raise Exception(row['channel_title]+" - +row['post_title'] + " 첫 댓글 이모티콘 no")
 
             get_box_text = _driver.find_element_by_css_selector(".box_text")
             get_box_text.click()
 
+            time.sleep(1)
+
             _driver.execute_script("arguments[0].innerHTML = arguments[1];", get_box_text,
-                                   html.unescape(row['content']))
+                                   row[
+                                       'content'] + "<div><br></div>" + "<div>1:1 문의하기는 밑에 링크를 클릭</div>" + "<div>https://plus.kakao.com/home/@" +
+                                   row[
+                                       'channel_title'] + "</div>" + "<div><br></div>" + "<div><br></div>")
             time.sleep(1)
 
             for comment in get_list_comment:
@@ -159,28 +161,41 @@ def reply_executor(row):
                     get_link_title = comment.find_element_by_css_selector(
                         ".link_title")
 
+                    # 내가 단 댓글에 다다를 경우
                     if row['channel_title'] == get_link_title.text:
-                        logger.info(row['post_title'] + " 댓글 달기 종료")
+                        logger.info(row['channel_title'] + " - " + row['post_title'] + " 댓글 달기 종료")
                         break
 
                     try:
                         comment.find_element_by_css_selector(
                             ".channel_emoticon")
                     except:
-                        raise Exception(row['post_title'] + " 이모티콘 아닌건 패스")
+                        raise Exception(row['channel_title'] + " - " + row['post_title'] + " 이모티콘 아닌건 패스")
 
                     get_link_title.click()
                     check_reply = True
+                    time.sleep(0.1)
+                    logger.info(row['channel_title'] + " - " + row['post_title'] + " - " + get_link_title.text + "태그")
                 except Exception as e:
                     logger.info(e)
 
             if not check_reply:
-                raise Exception(row['post_title'] + " 댓글 안 달림")
+                raise Exception(row['channel_title'] + " - " + row['post_title'] + " 댓글 안 달림")
 
             time.sleep(1)
 
             get_submit_button = _driver.find_element_by_css_selector(".btn_type2")
+
             get_submit_button.click()
+            logger.info(row['channel_title'] + " - " + row['post_title'] + " 댓글 달림")
+
+            time.sleep(3)
+
+            _driver.save_screenshot(_tmp_folder + row['post_title'] + '.png')
+
+            s3_client.upload_file(_tmp_folder + row['post_title'] + '.png', os.getenv('STORAGE_BUCKET_NAME'),
+                                  'debug/' + row['post_title'] + '.png')
+
         except Exception as e:
             logger.info(e)
         finally:

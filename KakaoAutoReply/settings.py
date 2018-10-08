@@ -43,7 +43,7 @@ INSTALLED_APPS = [
     'Api.apps.ApiConfig',
 
     'storages',
-    'webpack_loader'
+    'webpack_loader',
 ]
 
 MIDDLEWARE = [
