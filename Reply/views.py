@@ -7,14 +7,14 @@ from django.urls import reverse_lazy
 from django.views.generic import CreateView, UpdateView, DeleteView, DetailView
 
 from Post.models import Post
-from Reply.forms import CreateForm, UpdateForm
+from Reply.forms import Form
 from Reply.models import Reply
 
 
-class ReplyCV(CreateView, DetailView):
+class ReplyCV(DetailView, CreateView):
     # model = Post
-    form_class = CreateForm
-    template_name = "Reply/reply_create_form.html"
+    form_class = Form
+    template_name = "Reply/reply_form.html"
 
     def get_object(self, queryset=None):
         pk = self.kwargs['pk2']
@@ -32,8 +32,8 @@ class ReplyCV(CreateView, DetailView):
 
 
 class ReplyUV(UpdateView):
-    form_class = UpdateForm
-    template_name = "Reply/reply_update_form.html"
+    form_class = Form
+    template_name = "Reply/reply_form.html"
 
     def get_object(self, queryset=None):
         pk = self.kwargs['pk2']
@@ -58,6 +58,7 @@ class ReplyDV(DeleteView):
     def get_success_url(self):
         channel_id = self.kwargs['pk']
         return reverse_lazy('Channel:Post:index', kwargs={'pk': channel_id})
+
 
 # TODO status파라미터 받지 않고 처리
 def trigger(request, pk, pk2):

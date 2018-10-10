@@ -8,12 +8,23 @@
     <div class="row justify-content-center">
         <div class="card">
             <h2 class="card-header">
-                작업 등록
+                {% if object.post %}
+                    작업 수정
+                {% else %}
+                    작업 등록
+                {% endif %}
             </h2>
             <div class="card-body">
-                <h5 class="card-title">{{ object.post_title }}</h5>
-                <a href="{% url 'Channel:Post:index' object.channel.id %}" class="card-link">게시글 목록 보기</a>
-                <a href="{{ object.post_url }}" target="_blank">해당 게시글 열기</a>
+                {% if object.post %}
+                    <h5 class="card-title">{{ object.post.post_title }}</h5>
+                    <a href="{% url 'Channel:Post:index' object.post.channel.id %}" class="card-link">게시글 목록 보기</a>
+                    <a href="{{ object.post.post_url }}" target="_blank">해당 게시글 열기</a>
+                {% else %}
+                    <h5 class="card-title">{{ object.post_title }}</h5>
+                    <a href="{% url 'Channel:Post:index' object.channel.id %}" class="card-link">게시글 목록 보기</a>
+                    <a href="{{ object.post_url }}" target="_blank">해당 게시글 열기</a>
+                {% endif %}
+
                 <form method="post">{% csrf_token %}
                     <div class="form-group">
                         {{ form.start_time.label_tag }}

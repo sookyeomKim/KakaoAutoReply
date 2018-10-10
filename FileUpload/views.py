@@ -12,6 +12,7 @@ class FileUploadLV(FormView, ListView):
     model = FileUpload
     form_class = FileFieldForm
     success_url = reverse_lazy("FileUpload:index")
+
     def post(self, request, *args, **kwargs):
         form = FileFieldForm(request.POST, request.FILES)
         if form.is_valid():
@@ -20,4 +21,3 @@ class FileUploadLV(FormView, ListView):
             return self.form_valid(form)
         else:
             return self.form_invalid(form)
-

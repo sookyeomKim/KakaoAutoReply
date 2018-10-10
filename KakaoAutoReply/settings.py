@@ -54,6 +54,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'global_login_required.GlobalLoginRequiredMiddleware',
 ]
 
 ROOT_URLCONF = 'KakaoAutoReply.urls'
@@ -161,3 +162,7 @@ WEBPACK_LOADER = {
         'TIMEOUT': None
     }
 }
+
+PUBLIC_PATHS = [
+    '/accounts/',
+]
