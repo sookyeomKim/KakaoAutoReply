@@ -6,6 +6,7 @@ import pytz
 from time import sleep
 from decouple import config
 from django.conf import settings
+from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
 from django.http import HttpResponse
 from django.utils.datetime_safe import datetime
 
@@ -22,6 +23,7 @@ from django.views.generic import ListView
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
+
 
 class PostLV(ListView):
     model = Post
@@ -43,6 +45,47 @@ class PostLV(ListView):
             context['posts'] = channel.post_set.all()
         else:
             context['posts'] = channel.post_set.all()
+
+        # 페이지네이션
+        # http://wangin9.tistory.com/entry/django-paginator-limit
+        # 응용
+        total_len = len(context['posts'])
+
+        page = self.request.GET.get('page')
+
+        get_full_path = self.request.get_full_path()
+
+        parameter = None
+        print(get_full_path)
+        if "?" in get_full_path:
+            parameter = get_full_path.split("?")[1]
+            print(parameter)
+        paginator = Paginator(context['posts'], 5)
+        try:
+            context['posts'] = paginator.get_page(page)
+        except PageNotAnInteger:
+            context['posts'] = paginator.get_page(1)
+        except EmptyPage:
+            context['posts'] = paginator.get_page(paginator.num_pages)
+
+        index = context['posts'].number - 1
+        start_index = index - 2 if index >= 2 else 0
+        max_index = len(paginator.page_range)
+        if index < 2:
+            end_index = 5 - start_index
+        else:
+            end_index = index + 3 if index <= max_index - 3 else max_index
+        page_range = list(paginator.page_range[start_index:end_index])
+        previous_page_range = list(paginator.page_range[index - 9:index - 4])
+        nexe_page_range = list(paginator.page_range[index + 5:index + 10])
+        context['page_range'] = page_range
+        if previous_page_range:
+            context['previous_page_index'] = previous_page_range[len(previous_page_range) - 1]
+        if nexe_page_range:
+            context['nexe_page_index'] = nexe_page_range[0]
+        context['total_len'] = total_len
+        context['max_index'] = max_index - 2
+        context['parameter'] = parameter
         return context
 
 
